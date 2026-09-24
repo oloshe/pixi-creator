@@ -1,0 +1,30 @@
+{
+  "name": "@pxe/runtime",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./component-api": {
+      "types": "./dist/component-api.d.ts",
+      "import": "./dist/component-api.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@pxe/rendering": "workspace:*",
+    "@pxe/schema": "workspace:*",
+    "pixi.js": "^8.5.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.2"
+  }
+}

@@ -1,0 +1,10 @@
+node_modules
+.pxe
+dist
+tsconfig.tsbuildinfo
+.tmp
+packages/cli/web
+.pnpm-store
+*.md
+!README.md
+!AGENTS.md

@@ -1,0 +1,11 @@
+{
+  "name": "@pxe/player",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./dist/pxe-player.mjs",
+  "types": "./dist/types/index.d.ts",
+  "exports": { ".": { "types": "./dist/types/index.d.ts", "import": "./dist/pxe-player.mjs" } },
+  "scripts": { "build": "tsc -b && vite build" },
+  "dependencies": { "@pxe/runtime": "workspace:*", "@pxe/schema": "workspace:*" },
+  "devDependencies": { "vite": "^5.4.8", "typescript": "^5.6.3" }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "pixi-creator",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b packages/schema packages/rendering packages/runtime packages/editor-core packages/player apps/editor packages/cli examples/demo-game && pnpm --filter @pxe/player build",
+    "build:web": "pnpm --filter @pxe/editor build",
+    "build:cli": "pnpm --filter @pxe/cli build",
+    "copy:web": "node packages/cli/scripts/copy-web.mjs",
+    "dev:editor": "pnpm --filter @pxe/editor dev",
+    "dev": "pnpm --filter @pxe/demo-game dev",
+    "dev:cli": "pnpm copy:web && pnpm build:cli && node packages/cli/bin/pxe.mjs web --no-open",
+    "test": "vitest run",
+    "check:components": "node apps/editor/scripts/check-components.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.8",
+    "vitest": "^2.1.2"
+  },
+  "dependencies": {
+    "pixi.js": "^8.5.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^5.0.0",
+    "zod": "^3.23.8"
+  },
+  "packageManager": "pnpm@9.12.1"
+}

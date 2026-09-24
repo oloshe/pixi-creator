@@ -1,0 +1,28 @@
+{
+  "name": "@pxe/editor",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build"
+  },
+  "dependencies": {
+    "@pxe/editor-core": "workspace:*",
+    "@pxe/player": "workspace:*",
+    "@pxe/rendering": "workspace:*",
+    "@pxe/runtime": "workspace:*",
+    "@pxe/schema": "workspace:*",
+    "pixi.js": "^8.5.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sucrase": "^3.35.1",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.8"
+  }
+}

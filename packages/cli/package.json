@@ -1,0 +1,28 @@
+{
+  "name": "@pxe/cli",
+  "version": "0.1.0",
+  "description": "Pixi Creator local editor launcher: React static frontend + Hono backend",
+  "type": "module",
+  "bin": {
+    "pxe": "./bin/pxe.mjs"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "web"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.7",
+    "commander": "^12.1.0",
+    "hono": "^4.6.14",
+    "open": "^10.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "typescript": "^5.6.3"
+  }
+}

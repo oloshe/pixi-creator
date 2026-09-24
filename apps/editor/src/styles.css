@@ -1,0 +1,1072 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #1e293b;
+  color: #e2e8f0;
+  cursor: pointer;
+  min-height: 26px;
+  padding: 3px 8px;
+}
+
+button:hover:not(:disabled),
+button.active {
+  border-color: #38bdf8;
+  background: #0f2f45;
+}
+
+input,
+select {
+  width: 100%;
+  min-height: 26px;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #020617;
+  color: #e2e8f0;
+  padding: 3px 6px;
+}
+
+input[type="checkbox"] {
+  width: auto;
+  min-height: 0;
+}
+
+.editorShell {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) 30px;
+  width: 100%;
+  height: 100%;
+}
+
+.topBar {
+  display: grid;
+  gap: 4px;
+  border-bottom: 1px solid #1e293b;
+  background: #111827;
+  padding: 6px 10px;
+}
+
+.toolbar,
+.viewportBar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+}
+
+.viewportBar {
+  border-top: 1px solid #172033;
+  padding-top: 6px;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.bottomBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid #1e293b;
+  background: #111827;
+  padding: 6px 10px;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.statusMeta {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.menu,
+.toolGroup,
+.inlineActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inlineField {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.inlineField input,
+.inlineField select {
+  width: 74px;
+  min-height: 24px;
+  font-size: 11px;
+  padding: 1px 4px;
+}
+
+.inlineField input.tinyNumber {
+  width: 58px;
+}
+
+.inlineCheck {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  font-size: 11px;
+}
+
+.colorInput {
+  width: 40px;
+  min-height: 24px;
+  padding: 0;
+  border: 1px solid #334155;
+}
+
+.zoomSelect {
+  width: 84px;
+  min-height: 26px;
+}
+
+button.square {
+  width: 28px;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.title {
+  margin-left: auto;
+  color: #bae6fd;
+  font-weight: 600;
+  min-width: 120px;
+  text-align: right;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 290px 6px minmax(280px, 1fr) 6px 350px;
+  min-height: 0;
+}
+
+.panelDivider {
+  cursor: col-resize;
+  min-height: 0;
+  background: #1e293b;
+  transition: background 0.1s;
+}
+
+.panelDivider:hover,
+.panelDivider:active {
+  background: #38bdf8;
+}
+
+.componentPalette { padding: 12px; }
+.componentPalette h3 { color: #7dd3fc; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 18px 0 6px; }
+.hint { color: #94a3b8; font-size: 11px; line-height: 1.6; margin: 6px 0; }
+.paletteItem { display: flex; align-items: center; justify-content: space-between; width: 100%; margin: 4px 0; text-align: left; font-size: 12px; }
+.paletteItem[aria-disabled="true"] { opacity: 0.55; }
+.paletteItem .hint { margin: 0; }
+.createNodeRow { padding: 8px 10px; }
+.tree { min-height: 120px; }
+.hierarchy .inlineActions button { padding: 2px 6px; font-size: 10px; }
+.panelHint { padding: 0 10px 8px; }
+.componentHeading { display: flex; align-items: center; justify-content: space-between; gap: 2px; }
+.componentTwisty { width: 16px; border: 0; background: transparent; padding: 0; color: #94a3b8; cursor: pointer; display: flex; align-items: center; flex: none; }
+.componentEnableCheck { flex: none; margin: 0 2px; }
+.componentMore { flex: none; border: 0; background: transparent; padding: 0 6px; font-size: 16px; line-height: 1; color: #94a3b8; cursor: pointer; }
+.removeComponent { border: 0; padding: 0 8px; font-size: 20px; background: transparent; }
+.addComponentButton { border: 1px dashed #38bdf8; color: #7dd3fc; }
+.vectorField { border: 1px solid #334155; padding: 8px; min-width: 0; }
+.anchorPresets { flex-wrap: wrap; }
+.anchorPresets button { font-size: 10px; padding: 2px 6px; }
+.playSurface { position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.playSurface iframe { flex: 1; width: 100%; border: 0; min-height: 0; }
+.playConsole { height: 100px; overflow: auto; background: #020617; padding: 8px; font: 12px monospace; }
+.playConsole p { margin: 3px 0; }
+button:disabled { opacity: 0.4; cursor: default; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+.toolbar button { font-size: 12px; }
+.panelHeader { font-size: 13px; }
+
+.panel {
+  min-height: 0;
+  overflow: auto;
+  border-right: 1px solid #1e293b;
+  background: #0b1120;
+}
+
+.inspector {
+  border-right: 0;
+  border-left: 1px solid #1e293b;
+}
+
+.panelHeader {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 40px;
+  border-bottom: 1px solid #1e293b;
+  background: #111827;
+  padding: 8px 10px;
+  font-weight: 700;
+}
+
+.tree {
+  padding: 6px 0;
+}
+
+.treeItem {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 28px;
+  padding-right: 6px;
+}
+
+.treeItem.selected {
+  background: #075985;
+}
+
+.treeItem.locked .treeLabel {
+  color: #64748b;
+  font-style: italic;
+}
+
+.treeItem .twisty {
+  width: 16px;
+  min-height: 20px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: #94a3b8;
+  font-size: 10px;
+}
+
+.treeItem .iconToggle {
+  min-height: 20px;
+  border: 0;
+  background: transparent;
+  padding: 0 2px;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.treeLabel {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-height: 24px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 0 4px;
+  font-size: 12px;
+}
+
+.sceneRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 34px;
+  border: 0;
+  border-bottom: 1px solid #1e293b;
+  border-radius: 0;
+  background: #0f172a;
+  padding: 6px 10px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.sceneRow.selected {
+  background: #075985;
+}
+
+.sceneBadge {
+  border: 1px solid #334155;
+  border-radius: 4px;
+  padding: 0 4px;
+  color: #7dd3fc;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.sceneSize {
+  margin-left: auto;
+  color: #94a3b8;
+  font-size: 10px;
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: #64748b;
+  flex: none;
+}
+
+.statusDot.on {
+  background: #22c55e;
+}
+
+.sceneView {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: #2b2b2b;
+}
+
+.viewportHost {
+  position: absolute;
+  inset: 0;
+}
+
+.viewportHost canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.viewportOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.rulerCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.artboardLabel,
+.deviceLabel {
+  position: absolute;
+  transform: translateX(-50%);
+  color: #7dd3fc;
+  font-size: 11px;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px #020617;
+}
+
+.deviceLabel {
+  color: #cbd5e1;
+  font-size: 10px;
+}
+
+.inspectorSection {
+  display: grid;
+  gap: 10px;
+  border-bottom: 1px solid #1e293b;
+  padding: 12px;
+}
+
+.inspectorSection h2 {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+label {
+  display: grid;
+  gap: 5px;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkboxRow input {
+  width: auto;
+}
+
+.nineGridRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.nineGridGroup {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.nineGridLabel {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.pivotPad,
+.anchorPad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  width: 100%;
+}
+
+.pivotPad button,
+.anchorPad button {
+  min-height: 22px;
+  padding: 0;
+  border-radius: 4px;
+  background: #0f172a;
+}
+
+.pivotPad button.active {
+  background: #075985;
+  border-color: #38bdf8;
+}
+
+/* Anchor nine-grid is tinted amber and outlined so it reads as a distinct
+   control from the Pivot nine-grid above it. */
+.anchorPad {
+  padding: 4px;
+  border: 1px dashed #78350f;
+  border-radius: 6px;
+  background: #1c1408;
+}
+
+.anchorPad button.active {
+  background: #92400e;
+  border-color: #fbbf24;
+}
+
+.anchorEditor {
+  display: grid;
+  gap: 8px;
+  border-top: 1px dashed #1e293b;
+  padding-top: 8px;
+}
+
+.anchorAxisRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.componentBlock {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.componentTitle {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  padding: 0 4px;
+  text-align: left;
+  color: #e2e8f0;
+  font-weight: 700;
+}
+
+.missing,
+.emptyState {
+  color: #fbbf24;
+  padding: 12px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Left panel tabs (Hierarchy / Assets)                                */
+/* ------------------------------------------------------------------ */
+
+.leftPanel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.panelTabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid #1e293b;
+  background: #0b1120;
+  padding: 6px 8px;
+}
+
+.panelTabs button {
+  flex: 1;
+  font-size: 12px;
+}
+
+.tabCount {
+  margin-left: 6px;
+  color: #7dd3fc;
+  font-size: 10px;
+}
+
+.hierarchy,
+.assetsBrowser {
+  min-height: 0;
+  overflow: auto;
+}
+
+/* ------------------------------------------------------------------ */
+/* Assets browser                                                      */
+/* ------------------------------------------------------------------ */
+
+.assetsBrowser {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.assetsToolbar {
+  display: grid;
+  gap: 6px;
+  border-bottom: 1px solid #1e293b;
+  padding: 8px 10px;
+}
+
+.assetsToolbar .hint {
+  margin: 0;
+}
+
+.assetList {
+  padding: 4px 0 8px;
+}
+
+.assetGroupHeader {
+  position: sticky;
+  top: 0;
+  background: #0b1120;
+  color: #7dd3fc;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  padding: 4px 10px 2px;
+  text-transform: uppercase;
+}
+
+.assetRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 3px 10px;
+  text-align: left;
+  font-size: 12px;
+}
+
+.assetRow:hover {
+  background: #111827;
+}
+
+.assetRow.selected {
+  background: #075985;
+}
+
+.assetRow.open .assetName {
+  color: #86efac;
+}
+
+.assetIcon {
+  flex: none;
+}
+
+.assetName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assetExtension {
+  color: #64748b;
+  font-size: 10px;
+}
+
+.assetDetails {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid #1e293b;
+  background: #0f172a;
+  padding: 10px;
+}
+
+.assetDetails.floating {
+  position: fixed;
+  z-index: 30;
+  border: 1px solid #1e293b;
+  border-top: 1px solid #1e293b;
+  border-radius: 8px;
+  background: #0f172a;
+  box-shadow: 0 12px 32px rgba(2, 6, 23, 0.7);
+}
+
+.assetThumb {
+  flex: none;
+  border-radius: 3px;
+  object-fit: cover;
+  background: #020617;
+}
+
+.assetDetailsTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.assetDetails dl {
+  display: grid;
+  grid-template-columns: 68px 1fr;
+  gap: 4px 8px;
+  margin: 0;
+  font-size: 11px;
+}
+
+.assetDetails dt {
+  color: #94a3b8;
+}
+
+.assetDetails dd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  overflow: hidden;
+  word-break: break-all;
+}
+
+.assetDetails .hint {
+  margin: 0;
+}
+
+.miniButton {
+  min-height: 20px;
+  padding: 0 6px;
+  font-size: 10px;
+}
+
+.primaryButton {
+  border-color: #38bdf8;
+  background: #0c4a6e;
+  color: #e0f2fe;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ */
+/* Searchable asset picker (Inspector asset fields)                    */
+/* ------------------------------------------------------------------ */
+
+.assetPicker {
+  display: grid;
+  gap: 5px;
+  position: relative;
+}
+
+.assetPickerLabel {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.assetPickerInput {
+  width: 100%;
+}
+
+.assetPickerList {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  max-height: 240px;
+  overflow: auto;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  background: #111827;
+  padding: 4px;
+  box-shadow: 0 12px 32px rgba(2, 6, 23, 0.7);
+}
+
+.assetPickerOption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 26px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  padding: 3px 6px;
+  text-align: left;
+  font-size: 12px;
+  color: #e2e8f0;
+}
+
+.assetPickerOption:hover:not(:disabled) {
+  background: #0c4a6e;
+}
+
+.assetPickerOption.selected {
+  background: #075985;
+}
+
+.assetPickerOption.missing {
+  color: #fbbf24;
+}
+
+.assetPickerName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assetPickerPath {
+  color: #64748b;
+  font-size: 10px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assetPickerEmpty {
+  padding: 6px;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Start screen (no project / no scene)                                */
+/* ------------------------------------------------------------------ */
+
+.startScreen {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  background: #0b1120;
+  overflow: auto;
+  padding: 24px;
+}
+
+.startCard {
+  display: grid;
+  gap: 12px;
+  width: min(680px, 100%);
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  background: #111827;
+  padding: 24px;
+}
+
+.startCard h1 {
+  margin: 0;
+  color: #bae6fd;
+  font-size: 22px;
+}
+
+.startCard code {
+  color: #7dd3fc;
+}
+
+.startCard .hint {
+  margin: 0;
+  font-size: 12px;
+}
+
+.layoutPreview {
+  margin: 0;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  background: #020617;
+  color: #94a3b8;
+  padding: 12px;
+  font: 12px/1.5 monospace;
+  overflow: auto;
+}
+
+.startActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scenePicker {
+  display: grid;
+  gap: 6px;
+}
+
+.sceneChoice {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+}
+
+.startStatus {
+  margin: 0;
+  border-top: 1px solid #1e293b;
+  padding-top: 10px;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Toolbar project / scene title                                       */
+/* ------------------------------------------------------------------ */
+
+.title {
+  display: grid;
+  gap: 2px;
+  text-align: right;
+}
+
+.projectName {
+  color: #7dd3fc;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sceneTitle {
+  color: #bae6fd;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ */
+/* Menu bar (macOS-style)                                              */
+/* ------------------------------------------------------------------ */
+
+.menuBar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border-bottom: 1px solid #1e293b;
+  background: #0b1120;
+  padding: 2px 10px;
+  user-select: none;
+}
+
+.menuBar .menu {
+  position: relative;
+}
+
+.menuTitle {
+  min-height: 26px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  padding: 2px 10px;
+  font-size: 12px;
+  color: #e2e8f0;
+}
+
+.menuTitle:hover,
+.menuTitle.open {
+  background: #1e293b;
+}
+
+.menuLocaleHint {
+  margin-left: 6px;
+  color: #7dd3fc;
+  font-size: 10px;
+}
+
+.menuDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 40;
+  min-width: 220px;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  background: #111827;
+  padding: 4px;
+  box-shadow: 0 12px 32px rgba(2, 6, 23, 0.7);
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+  min-height: 28px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  padding: 4px 10px;
+  text-align: left;
+  font-size: 12px;
+  color: #e2e8f0;
+}
+
+.menuItem:hover:not(:disabled) {
+  background: #0c4a6e;
+}
+
+.menuItem.danger {
+  color: #fca5a5;
+}
+
+.menuShortcut {
+  margin-left: auto;
+  color: #64748b;
+  font-size: 10px;
+}
+
+.menuSeparator {
+  height: 1px;
+  margin: 4px 6px;
+  background: #1e293b;
+}
+
+.menuSubmenu {
+  position: relative;
+}
+
+.menuSubmenuArrow {
+  margin-left: auto;
+  color: #64748b;
+  font-size: 10px;
+}
+
+.submenuDropdown {
+  display: none;
+  left: 100%;
+  top: -4px;
+  min-width: 180px;
+}
+
+.menuSubmenu:hover .submenuDropdown,
+.menuSubmenu:focus-within .submenuDropdown {
+  display: block;
+}
+
+/* Tool buttons with icons */
+.toolButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+}
+
+.toolButton svg {
+  flex: none;
+}
+
+.toolLabel {
+  font-size: 12px;
+}
+
+/* Context menu */
+.contextMenu {
+  position: fixed;
+  z-index: 90;
+  min-width: 168px;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  background: #111827;
+  padding: 4px;
+  box-shadow: 0 12px 32px rgba(2, 6, 23, 0.7);
+}
+
+.contextMenuItem {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  padding: 4px 10px;
+  text-align: left;
+  font-size: 12px;
+  color: #e2e8f0;
+}
+
+.contextMenuItem:hover:not(:disabled) {
+  background: #0c4a6e;
+}
+
+.contextMenuItem.danger {
+  color: #fca5a5;
+}
+
+.treeItem .twisty:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+/* Reusable modal prompt */
+.promptBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: rgba(2, 6, 23, 0.55);
+}
+
+.promptDialog {
+  display: grid;
+  gap: 12px;
+  width: min(360px, calc(100vw - 32px));
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  background: #111827;
+  padding: 16px;
+  box-shadow: 0 18px 48px rgba(2, 6, 23, 0.7);
+}
+
+.promptDialog h2 {
+  margin: 0;
+  font-size: 15px;
+  color: #e2e8f0;
+}
+
+.promptActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

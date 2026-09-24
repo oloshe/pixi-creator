@@ -1,0 +1,34 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "jsx": "react-jsx",
+    "rootDir": "src",
+    "outDir": "dist",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ]
+  },
+  "references": [
+    {
+      "path": "../../packages/schema"
+    },
+    {
+      "path": "../../packages/rendering"
+    },
+    {
+      "path": "../../packages/runtime"
+    },
+    {
+      "path": "../../packages/editor-core"
+    },
+    {
+      "path": "../../packages/player"
+    }
+  ],
+  "include": [
+    "src"
+  ]
+}

@@ -1,0 +1,5 @@
+packages:
+  - "packages/*"
+  - "apps/*"
+  # Opened by the editor as a project folder, not installed as a workspace package.
+  - "!examples/demo-project"
