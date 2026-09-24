@@ -1,52 +1,14 @@
 /**
  * Central HTTP client for the local backend served by `pxe web`.
  *
- * The CLI binds 127.0.0.1 and opens `/?token=…`; every `/api/*` call re-sends
- * that token as `Authorization: Bearer …` so a random browser tab (or a
- * cross-origin page) cannot drive the filesystem/process backend.
+ * The CLI binds 127.0.0.1 and serves the prebuilt editor plus `/api/*` file
+ * and system routes. No session token is used: the server is loopback-only and
+ * rejects non-loopback `Host`/`Origin` headers to prevent CSRF and DNS
+ * rebinding.
  *
  * Components never call `fetch` directly — they go through `api` here, so the
  * transport can change without another full-project migration.
  */
-
-const TOKEN_STORAGE_KEY = 'pxe:token';
-
-function readToken(): string | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  const query = new URLSearchParams(window.location.search).get('token');
-
-  if (query) {
-    try {
-      window.sessionStorage.setItem(TOKEN_STORAGE_KEY, query);
-    } catch {
-      /* Best-effort. */
-    }
-    return query;
-  }
-
-  try {
-    return window.sessionStorage.getItem(TOKEN_STORAGE_KEY);
-  } catch {
-    return null;
-  }
-}
-
-let tokenValue: string | null | undefined;
-
-export function getToken(): string | null {
-  if (tokenValue === undefined) {
-    tokenValue = readToken();
-  }
-  return tokenValue;
-}
-
-function authHeaders(): Record<string, string> {
-  const token = getToken();
-  return token ? { authorization: `Bearer ${token}` } : {};
-}
 
 export interface ApiRequest {
   method?: string;
@@ -54,7 +16,7 @@ export interface ApiRequest {
 }
 
 export async function apiFetch(path: string, init: ApiRequest = {}): Promise<Response> {
-  const headers: Record<string, string> = { ...authHeaders() };
+  const headers: Record<string, string> = {};
   const hasBody = init.body !== undefined;
   const body = hasBody ? (typeof init.body === 'string' ? init.body : JSON.stringify(init.body)) : undefined;
 
@@ -128,7 +90,11 @@ export async function readBytes(path: string): Promise<Uint8Array<ArrayBuffer>> 
 
 let httpBackend: boolean | null = null;
 
-/** Detects whether we are served by `pxe web` (token present + `/api` reachable). */
+/**
+ * Detects whether we are served by `pxe web`. `/api/workspace` only answers
+ * with `{ path, name }` on the real backend; a static host (Vite dev or SPA
+ * fallback) returns HTML or 404, which fails the JSON/`path` check.
+ */
 export async function detectHttpBackend(): Promise<boolean> {
   if (httpBackend !== null) {
     return httpBackend;
@@ -136,13 +102,9 @@ export async function detectHttpBackend(): Promise<boolean> {
 
   httpBackend = false;
 
-  if (!getToken()) {
-    return httpBackend;
-  }
-
   try {
-    const response = await fetch('/api/workspace', { headers: authHeaders() });
-    httpBackend = response.ok;
+    const info = await api.workspace();
+    httpBackend = typeof info?.path === 'string' && info.path.length > 0;
   } catch {
     httpBackend = false;
   }

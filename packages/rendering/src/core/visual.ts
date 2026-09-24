@@ -42,6 +42,11 @@ export function toNumber(value: unknown, fallback: number): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
+/** Normalized `0 → 1` value (used by sprite/text anchors). */
+export function toUnit(value: unknown, fallback: number): number {
+  return Math.min(1, Math.max(0, toNumber(value, fallback)));
+}
+
 export function toBoolean(value: unknown, fallback: boolean): boolean {
   return typeof value === 'boolean' ? value : fallback;
 }

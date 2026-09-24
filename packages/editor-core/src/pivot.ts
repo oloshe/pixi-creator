@@ -6,8 +6,8 @@ export function pivotWithCompensation(
   pivotX: number,
   pivotY: number,
 ): RectTransformData {
-  const dx = (pivotX - transform.pivotX) * transform.width * transform.scaleX;
-  const dy = (pivotY - transform.pivotY) * transform.height * transform.scaleY;
+  const dx = (pivotX - transform.pivotX) * transform.scaleX;
+  const dy = (pivotY - transform.pivotY) * transform.scaleY;
   const angle = transform.rotationDeg * Math.PI / 180;
   return {
     ...transform, pivotX, pivotY,

@@ -97,7 +97,7 @@ export class GameNode {
     this.setSize(this._width, value);
   }
 
-  /** Normalized pivot, `0 → 1` (top-left → bottom-right). */
+  /** Pixel pivot in local units (top-left `0,0` → bottom-right `width,height`). */
   get pivotX(): number {
     return this._pivotX;
   }
@@ -313,9 +313,9 @@ export class GameNode {
     this.refreshPivot();
   }
 
-  /** Applies normalized pivot to the Pixi pivot in local (unscaled) units. */
+  /** Applies the pixel pivot to the Pixi pivot in local (unscaled) units. */
   refreshPivot(): void {
-    this.view.pivot.set(this._pivotX * this._width, this._pivotY * this._height);
+    this.view.pivot.set(this._pivotX, this._pivotY);
   }
 
   refreshActiveInHierarchy(): void {

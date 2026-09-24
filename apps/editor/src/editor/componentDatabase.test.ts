@@ -50,7 +50,7 @@ describe('project component database', () => {
     expect(project.hasWriteAccess).toBe(false);
   });
   it('injects manifests per document and roundtrips unknown component props without alteration', () => {
-    const doc = new SceneDocument({ schemaVersion: 3, id: 'test', name: 'Test', settings: createDefaultSceneSettings(), root: createCanvasNode() });
+    const doc = new SceneDocument({ schemaVersion: 4, id: 'test', name: 'Test', settings: createDefaultSceneSettings(), root: createCanvasNode() });
     const manifest = createComponentManifest([metadata]);
     expect(addComponent(doc, doc.data.root.id, metadata.type, manifest)).toBe(true);
     expect(doc.data.root.components[0]!.props).toEqual({ speed: 42 });

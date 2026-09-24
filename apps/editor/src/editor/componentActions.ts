@@ -52,7 +52,8 @@ export function createPresetNode(preset: NodePreset, settings: SceneSettings = c
 
   if (preset === 'Screen') {
     Object.assign(node.transform, { width: settings.designWidth, height: settings.designHeight,
-      x: settings.designWidth / 2, y: settings.designHeight / 2, pivotX: 0.5, pivotY: 0.5 });
+      x: settings.designWidth / 2, y: settings.designHeight / 2,
+      pivotX: settings.designWidth / 2, pivotY: settings.designHeight / 2 });
     node.components.push(createManifestComponent('engine.UIAnchor', {
       anchorLeft: true, anchorRight: true, anchorTop: true, anchorBottom: true,
     }));
@@ -94,8 +95,8 @@ export function createPresetNode(preset: NodePreset, settings: SceneSettings = c
     const label = createEmptyNode('Label', { layer: 'UI' });
     label.transform.width = 180;
     label.transform.height = 40;
-    label.transform.pivotX = 0.5;
-    label.transform.pivotY = 0.5;
+    label.transform.pivotX = 90;
+    label.transform.pivotY = 20;
     label.components.push(
       createManifestComponent('engine.UIAnchor', { centerX: true, centerY: true }),
       createManifestComponent('engine.TextRenderer', { text: 'Button', fontSize: 24 }),

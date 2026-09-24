@@ -1,12 +1,17 @@
+import { useEffect, useState } from 'react';
 import { assetDatabasePath, defaultScenesDirName, projectConfigFileName } from '@pxe/schema';
+import { detectHttpBackend } from '../lib/api';
 import { useEditorStore } from '../editor/store';
 import { useI18n } from '../i18n';
 
 /**
  * Landing screen.
  *
- * The editor deliberately ships **no** default scene: a scene is either opened
- * from `assets/scenes/` inside a project, or created empty by the user.
+ * The editor deliberately ships **no** default scene and opens **no** default
+ * project: a scene is opened from `assets/scenes/` inside a project, or created
+ * empty by the user. Under `pxe web` an explicit "Open Workspace" action opens
+ * the CLI's current directory (with external-editor support); otherwise "Open
+ * Project" uses the browser-native directory picker.
  */
 export function StartScreen() {
   const { t } = useI18n();
@@ -20,6 +25,11 @@ export function StartScreen() {
   const newScene = store((state) => state.newScene);
   const refreshAssets = store((state) => state.refreshAssets);
   const closeProject = store((state) => state.closeProject);
+  const [backend, setBackend] = useState(false);
+
+  useEffect(() => {
+    void detectHttpBackend().then(setBackend);
+  }, []);
 
   const scenes = assets.filter((asset) => asset.type === 'scene');
 
@@ -44,7 +54,17 @@ export function StartScreen() {
             <div className="startActions">
               <button type="button" className="primaryButton" disabled={busy} onClick={newScene}>{t('start.newScene')}</button>
               <button type="button" disabled={busy} onClick={() => void store.getState().openSceneJSON()}>{t('start.openSceneJSON')}</button>
-              <button type="button" className="primaryButton" disabled={busy} onClick={() => void openProject()}>
+              {backend && (
+                <button
+                  type="button"
+                  className="primaryButton"
+                  disabled={busy}
+                  onClick={() => void store.getState().openCurrentWorkspace()}
+                >
+                  {t('start.openWorkspace')}
+                </button>
+              )}
+              <button type="button" disabled={busy} onClick={() => void openProject()}>
                 {t('start.openProject')}
               </button>
             </div>

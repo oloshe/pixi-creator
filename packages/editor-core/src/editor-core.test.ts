@@ -18,7 +18,7 @@ import { createCanvasNode, createComponentData, createEmptyNode, findNode, isSce
 
 function createScene(): SceneData {
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     id: 'scene-editor',
     name: 'Editor',
     settings: createDefaultSceneSettings(),

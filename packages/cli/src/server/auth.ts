@@ -27,10 +27,12 @@ export function hostGuard() {
 }
 
 /**
- * Guards `/api/*`: a browser `Origin` must be loopback (when present), and the
- * request must carry the per-launch `Authorization: Bearer <token>`.
+ * Guards `/api/*` against cross-site requests: a browser `Origin` must be
+ * loopback when present. There is deliberately no session token — the server is
+ * bound to 127.0.0.1 and this origin check plus `hostGuard` cover CSRF/DNS
+ * rebinding.
  */
-export function authGuard(token: string) {
+export function originGuard() {
   return async (c: Context, next: Next) => {
     const origin = c.req.header('origin');
 
@@ -44,10 +46,6 @@ export function authGuard(token: string) {
       if (!ALLOWED_HOSTNAMES.has(hostname)) {
         return c.json({ error: 'forbidden origin' }, 403);
       }
-    }
-
-    if (c.req.header('authorization') !== `Bearer ${token}`) {
-      return c.json({ error: 'unauthorized' }, 401);
     }
 
     await next();

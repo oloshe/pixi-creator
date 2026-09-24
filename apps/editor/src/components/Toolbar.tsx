@@ -4,6 +4,7 @@ import { useEditorStore, type EditorTool } from '../editor/store';
 import { useSceneDocument } from '../editor/useSceneDocument';
 import { useI18n } from '../i18n';
 import { MoveIcon, PivotIcon, RotateIcon, ScaleIcon, SelectIcon } from './icons';
+import { NumberInput } from './NumberInput';
 
 const tools: { id: EditorTool; hint: string; Icon: typeof SelectIcon }[] = [
   { id: 'select', hint: 'V', Icon: SelectIcon },
@@ -182,20 +183,18 @@ export function Toolbar() {
         <div className="toolGroup">
           <label className="inlineField">
             {t('view.grid')}
-            <input
-              type="number"
+            <NumberInput
               min={1}
               value={view.gridSize}
-              onChange={(event) => state().updateView({ gridSize: Math.max(1, Number(event.target.value) || 1) })}
+              onChange={(value) => state().updateView({ gridSize: Math.max(1, value) })}
             />
           </label>
           <label className="inlineField">
             Major
-            <input
-              type="number"
+            <NumberInput
               min={1}
               value={view.majorGrid}
-              onChange={(event) => state().updateView({ majorGrid: Math.max(1, Number(event.target.value) || 1) })}
+              onChange={(value) => state().updateView({ majorGrid: Math.max(1, value) })}
             />
           </label>
         </div>
@@ -207,30 +206,27 @@ export function Toolbar() {
           </label>
           <label className="inlineField">
             {t('view.pos')}
-            <input
-              type="number"
+            <NumberInput
               min={0}
               value={view.snap.position}
-              onChange={(event) => state().updateView({ snap: { ...view.snap, position: Number(event.target.value) || 0 } })}
+              onChange={(value) => state().updateView({ snap: { ...view.snap, position: value } })}
             />
           </label>
           <label className="inlineField">
             {t('view.rot')}
-            <input
-              type="number"
+            <NumberInput
               min={0}
               value={view.snap.rotation}
-              onChange={(event) => state().updateView({ snap: { ...view.snap, rotation: Number(event.target.value) || 0 } })}
+              onChange={(value) => state().updateView({ snap: { ...view.snap, rotation: value } })}
             />
           </label>
           <label className="inlineField">
             {t('view.scale')}
-            <input
-              type="number"
+            <NumberInput
               min={0}
-              step="0.05"
+              step={0.05}
               value={view.snap.scale}
-              onChange={(event) => state().updateView({ snap: { ...view.snap, scale: Number(event.target.value) || 0 } })}
+              onChange={(value) => state().updateView({ snap: { ...view.snap, scale: value } })}
             />
           </label>
         </div>
@@ -246,21 +242,19 @@ export function Toolbar() {
           </label>
           {deviceId === 'custom' && (
             <>
-              <input
-                aria-label="Device width"
+              <NumberInput
+                ariaLabel="Device width"
                 className="tinyNumber"
-                type="number"
                 min={1}
                 value={customDevice.width}
-                onChange={(event) => state().setDevice('custom', { width: Math.max(1, Number(event.target.value) || 1) })}
+                onChange={(value) => state().setDevice('custom', { width: Math.max(1, value) })}
               />
-              <input
-                aria-label="Device height"
+              <NumberInput
+                ariaLabel="Device height"
                 className="tinyNumber"
-                type="number"
                 min={1}
                 value={customDevice.height}
-                onChange={(event) => state().setDevice('custom', { height: Math.max(1, Number(event.target.value) || 1) })}
+                onChange={(value) => state().setDevice('custom', { height: Math.max(1, value) })}
               />
             </>
           )}

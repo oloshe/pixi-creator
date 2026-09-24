@@ -1048,6 +1048,91 @@ label {
   background: rgba(2, 6, 23, 0.55);
 }
 
+/* Generic modal (shares the prompt backdrop / actions styling). */
+.modalDialog {
+  display: grid;
+  gap: 12px;
+  width: min(420px, calc(100vw - 32px));
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  background: #111827;
+  padding: 16px;
+  box-shadow: 0 18px 48px rgba(2, 6, 23, 0.7);
+}
+
+.modalDialog h2 {
+  margin: 0;
+  font-size: 15px;
+  color: #e2e8f0;
+}
+
+.modalBody {
+  color: #cbd5e1;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------ */
+/* Toasts                                                               */
+/* ------------------------------------------------------------------ */
+
+.toaster {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 200;
+  display: grid;
+  gap: 8px;
+  width: min(360px, calc(100vw - 20px));
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid #334155;
+  border-left-width: 3px;
+  border-radius: 8px;
+  background: #111827;
+  padding: 10px 12px;
+  color: #e2e8f0;
+  box-shadow: 0 12px 32px rgba(2, 6, 23, 0.7);
+  animation: toast-in 0.16s ease-out;
+}
+
+.toastTitle {
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.toastMessage {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #cbd5e1;
+  overflow-wrap: anywhere;
+}
+
+.toast-info { border-left-color: #38bdf8; }
+.toast-info .toastTitle { color: #7dd3fc; }
+
+.toast-success { border-left-color: #22c55e; }
+.toast-success .toastTitle { color: #86efac; }
+
+.toast-warning { border-left-color: #fbbf24; }
+.toast-warning .toastTitle { color: #fcd34d; }
+
+.toast-error { border-left-color: #ef4444; }
+.toast-error .toastTitle { color: #fca5a5; }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .promptDialog {
   display: grid;
   gap: 12px;

@@ -36,6 +36,8 @@ export class SpriteRenderer extends Component {
   /** `sizeMode: 'custom'` only. */
   width: number | null = null;
   height: number | null = null;
+  anchorX = 0;
+  anchorY = 0;
 
   setAssetManager(assets: AssetManager): void {
     this.resolver = new RuntimeAssetResolver(assets);
@@ -79,6 +81,8 @@ export class SpriteRenderer extends Component {
       blendMode: this.blendMode,
       width: this.width,
       height: this.height,
+      anchorX: this.anchorX,
+      anchorY: this.anchorY,
       visible: this.enabled,
     });
   }

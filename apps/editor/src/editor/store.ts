@@ -69,6 +69,7 @@ import {
 } from './workspaceSettings';
 import { runtimeTypeDeclarations, typeStubPath } from './typeStub';
 import { ProjectSession, type ProjectAsset } from './projectSession';
+import { toast } from '../components/toastStore';
 import {
   clampZoom,
   deviceRectOfDesignRect,
@@ -271,50 +272,66 @@ export const useEditorStore = create<EditorState>((set, get) => {
 
   /**
    * Opens a project-relative file (`rel`) or the project folder (`rel` null)
-   * in an external editor. Prefers a browser deep link for VS Code/Zed (which
-   * only needs the absolute workspace path), falls back to the backend spawn,
-   * and finally downloads the file in pure-browser mode.
+   * in an external editor. Under the local backend it spawns the editor (which
+   * logs to the CLI console and reports errors); a browser deep link is only a
+   * fallback. Pure-browser mode downloads the file and says why.
    */
   async function openExternalPath(rel: string | null, editor: EditorId): Promise<void> {
     const project = session?.project ?? null;
 
     if (!project) {
-      set({ status: 'Open a project first' });
+      const message = 'Open a project first';
+      set({ status: message });
+      toast.warning(message);
       return;
     }
 
     const root = project.rootPath;
     const label = rel ?? project.rootName;
 
-    // Browser deep link (scheme) — synchronous so it stays within the click.
-    if (root && hasEditorScheme(editor)) {
-      const absolute = rel ? joinAbsolute(root, rel) : root;
-      const href = editorDeepLink(editor, absolute, rel === null);
-      if (href) {
-        triggerDeepLink(href);
-        set({ status: `Opening ${label} in external editor` });
+    // Backend spawn first — the only path with real console output and a
+    // catchable error. Browser deep links are silent, so they are a fallback.
+    if (root) {
+      try {
+        await openInEditor(editor, root, rel, get().customEditorCommand || undefined);
+        const message = `Opening ${label} in external editor`;
+        set({ status: message });
+        toast.success(message);
+        console.info(`[pxe] ${message} · ${rel ?? 'project folder'}`);
+        return;
+      } catch (error) {
+        console.error(`[pxe] open-editor failed:`, error);
+
+        // For editors with a registered URI scheme, fall back to a deep link.
+        if (hasEditorScheme(editor)) {
+          const absolute = rel ? joinAbsolute(root, rel) : root;
+          const href = editorDeepLink(editor, absolute, rel === null);
+          if (href) {
+            triggerDeepLink(href);
+            const fallback = `Spawn failed (${String(error)}) — sent ${editor}:// deep link for ${label}`;
+            set({ status: fallback });
+            toast.info(fallback);
+            return;
+          }
+        }
+
+        const message = `Open failed: ${String(error)}`;
+        set({ status: message });
+        toast.error(message, 'Open in external editor');
         return;
       }
     }
 
-    // Backend spawn — the only path for Sublime / Notepad / custom commands.
-    if (root) {
-      try {
-        await openInEditor(editor, root, rel, get().customEditorCommand || undefined);
-        set({ status: `Opening ${label} in external editor` });
-      } catch (error) {
-        set({ status: `Open failed: ${String(error)}` });
-      }
-      return;
-    }
-
     // Pure browser without an absolute path: the best we can do for a file is
-    // download it; folders cannot be handed to an external tool.
+    // download it; folders cannot be handed to an external tool. Surface this
+    // clearly instead of failing silently.
     if (rel) {
       const entry = project.entries.get(rel);
       const text = entry ? await entry.text() : null;
       if (text === null || text === undefined) {
-        set({ status: 'Open failed: source not found' });
+        const message = 'Open failed: source not found';
+        set({ status: message });
+        toast.error(message);
         return;
       }
       const name = rel.split('/').pop() ?? 'component.ts';
@@ -324,11 +341,15 @@ export const useEditorStore = create<EditorState>((set, get) => {
       link.download = name;
       link.click();
       URL.revokeObjectURL(link.href);
-      set({ status: `Downloaded ${rel} — run pxe web to open it in ${editor}` });
+      const message = `Downloaded ${rel} — run pxe web and open the workspace to launch it in ${editor}`;
+      set({ status: message });
+      toast.warning(message, 'No local backend');
       return;
     }
 
-    set({ status: 'Open the project via pxe web to launch external editors or the file manager' });
+    const message = 'Open the project via pxe web to launch external editors or the file manager';
+    set({ status: message });
+    toast.warning(message, 'No local backend');
   }
 
   return {
@@ -478,7 +499,7 @@ export const useEditorStore = create<EditorState>((set, get) => {
     newScene() {
       const settings = createDefaultSceneSettings({ backgroundColor: '#1e1e1e' });
       get().setDocument({
-        schemaVersion: 3,
+        schemaVersion: 4,
         id: createId('scene'),
         name: 'Untitled',
         settings,
@@ -725,20 +746,30 @@ export const useEditorStore = create<EditorState>((set, get) => {
       const project = session?.project ?? null;
 
       if (!project) {
-        set({ status: 'Open a project first' });
+        const message = 'Open a project first';
+        set({ status: message });
+        toast.warning(message);
         return;
       }
 
       if (!project.rootPath) {
-        set({ status: 'Open the project via pxe web to use the file manager' });
+        const message = 'Open the project via pxe web to use the file manager';
+        set({ status: message });
+        toast.warning(message, 'No local backend');
         return;
       }
 
       try {
         await openInFileManager(project.rootPath, null);
-        set({ status: `Opened ${project.rootName} in the file manager` });
+        const message = `Opened ${project.rootName} in the file manager`;
+        set({ status: message });
+        toast.success(message);
+        console.info(`[pxe] ${message}`);
       } catch (error) {
-        set({ status: `Open failed: ${String(error)}` });
+        console.error('[pxe] open file manager failed:', error);
+        const message = `Open failed: ${String(error)}`;
+        set({ status: message });
+        toast.error(message, 'Open in file manager');
       }
     },
 
@@ -746,20 +777,30 @@ export const useEditorStore = create<EditorState>((set, get) => {
       const project = session?.project ?? null;
 
       if (!project) {
-        set({ status: 'Open a project first' });
+        const message = 'Open a project first';
+        set({ status: message });
+        toast.warning(message);
         return;
       }
 
       if (!project.rootPath) {
-        set({ status: 'Open the project via pxe web to use the file manager' });
+        const message = 'Open the project via pxe web to use the file manager';
+        set({ status: message });
+        toast.warning(message, 'No local backend');
         return;
       }
 
       try {
         await openInFileManager(project.rootPath, rel, true);
-        set({ status: `Revealed ${rel} in the file manager` });
+        const message = `Revealed ${rel} in the file manager`;
+        set({ status: message });
+        toast.success(message);
+        console.info(`[pxe] ${message}`);
       } catch (error) {
-        set({ status: `Open failed: ${String(error)}` });
+        console.error('[pxe] reveal file failed:', error);
+        const message = `Open failed: ${String(error)}`;
+        set({ status: message });
+        toast.error(message, 'Reveal in file manager');
       }
     },
 

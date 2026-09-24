@@ -132,6 +132,7 @@ export class SceneViewRuntime {
   private spacing: string | null = null;
   private spacePanning = false;
   private initialized = false;
+  private resizeObserver: ResizeObserver | null = null;
 
   constructor(private readonly callbacks: SceneViewCallbacks) {}
 
@@ -159,6 +160,19 @@ export class SceneViewRuntime {
     this.viewportSize = { width: this.app.screen.width, height: this.app.screen.height };
     this.callbacks.onViewportResize(this.viewportSize);
 
+    // Pixi's `resizeTo` only reacts to *window* resizes. Panel-dragging changes
+    // the host size without resizing the window, which would leave the renderer
+    // at its old resolution while CSS stretches the canvas (the "stretched
+    // scene" bug). Observe the host directly so the renderer always matches.
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        // `app.resize()` re-reads `resizeTo`'s clientWidth/Height and emits the
+        // renderer 'resize' event handled below.
+        this.app.resize();
+      });
+      this.resizeObserver.observe(host);
+    }
+
     this.app.stage.eventMode = 'static';
     this.app.stage.hitArea = this.app.screen;
     this.bindEvents();
@@ -177,6 +191,8 @@ export class SceneViewRuntime {
 
   destroy(): void {
     this.unbindEvents();
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
     this.tree.destroy();
 
     if (this.initialized) {
@@ -730,8 +746,8 @@ export class SceneViewRuntime {
     }
 
     return container.toGlobal({
-      x: node.transform.pivotX * node.transform.width,
-      y: node.transform.pivotY * node.transform.height,
+      x: node.transform.pivotX,
+      y: node.transform.pivotY,
     });
   }
 
@@ -980,9 +996,9 @@ export class SceneViewRuntime {
       const angle = before.rotationDeg * Math.PI / 180;
       const dx = local.x - before.x;
       const dy = local.y - before.y;
-      if (before.width * before.scaleX !== 0 && before.height * before.scaleY !== 0) {
-        const pivotX = clamp01(before.pivotX + (Math.cos(angle) * dx + Math.sin(angle) * dy) / (before.width * before.scaleX));
-        const pivotY = clamp01(before.pivotY + (-Math.sin(angle) * dx + Math.cos(angle) * dy) / (before.height * before.scaleY));
+      if (before.scaleX !== 0 && before.scaleY !== 0) {
+        const pivotX = clamp(before.pivotX + (Math.cos(angle) * dx + Math.sin(angle) * dy) / before.scaleX, 0, before.width);
+        const pivotY = clamp(before.pivotY + (-Math.sin(angle) * dx + Math.cos(angle) * dy) / before.scaleY, 0, before.height);
         Object.assign(next, pivotWithCompensation(before, pivotX, pivotY));
       }
     }
@@ -1084,10 +1100,10 @@ export class SceneViewRuntime {
     this.guides = result.lines;
 
     if (snapped.x !== rect.x || snapped.y !== rect.y) {
-      const effectivePivotX = next.scaleX < 0 ? 1 - next.pivotX : next.pivotX;
-      const effectivePivotY = next.scaleY < 0 ? 1 - next.pivotY : next.pivotY;
-      next.x = snapped.x + effectivePivotX * rect.width;
-      next.y = snapped.y + effectivePivotY * rect.height;
+      const effectivePivotX = next.scaleX < 0 ? next.width - next.pivotX : next.pivotX;
+      const effectivePivotY = next.scaleY < 0 ? next.height - next.pivotY : next.pivotY;
+      next.x = snapped.x + effectivePivotX * Math.abs(next.scaleX);
+      next.y = snapped.y + effectivePivotY * Math.abs(next.scaleY);
     }
 
     const spacing = measureSpacing(snapped, siblings);
@@ -1226,15 +1242,17 @@ function resizeTransform(
   if (handle.includes('n')) top = Math.min(y, bottom - 1);
   if (handle.includes('s')) bottom = Math.max(y, top + 1);
 
-  const effectivePivotX = before.scaleX < 0 ? 1 - before.pivotX : before.pivotX;
-  const effectivePivotY = before.scaleY < 0 ? 1 - before.pivotY : before.pivotY;
+  const nextWidth = Math.max(1, (right - left) / magnitudeX);
+  const nextHeight = Math.max(1, (bottom - top) / magnitudeY);
+  const effectivePivotX = before.scaleX < 0 ? nextWidth - before.pivotX : before.pivotX;
+  const effectivePivotY = before.scaleY < 0 ? nextHeight - before.pivotY : before.pivotY;
 
   return {
     ...before,
-    width: Math.max(1, (right - left) / magnitudeX),
-    height: Math.max(1, (bottom - top) / magnitudeY),
-    x: left + effectivePivotX * (right - left),
-    y: top + effectivePivotY * (bottom - top),
+    width: nextWidth,
+    height: nextHeight,
+    x: left + effectivePivotX * magnitudeX,
+    y: top + effectivePivotY * magnitudeY,
   };
 }
 
@@ -1272,8 +1290,8 @@ function distance(a: { x: number; y: number }, b: { x: number; y: number }): num
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
-function clamp01(value: number): number {
-  return Math.min(1, Math.max(0, value));
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
 }
 
 function emptyTransform(): RectTransformData {

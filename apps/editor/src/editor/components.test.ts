@@ -8,7 +8,7 @@ import { transformNode } from './transformActions';
 
 function document() {
   return new SceneDocument({
-    schemaVersion: 3,
+    schemaVersion: 4,
     id: 'scene-test',
     name: 'Test',
     settings: createDefaultSceneSettings(),
@@ -22,14 +22,14 @@ describe('Component authoring workflow', () => {
     const screen = createPresetNode('Screen', doc.data.settings);
     doc.data.root.children.push(screen);
     const before = layoutPreview(doc.data.root).children[0]!.transform;
-    expect(before).toMatchObject({ width: 750, height: 1334, pivotX: 0.5, pivotY: 0.5, x: 375, y: 667 });
+    expect(before).toMatchObject({ width: 750, height: 1334, pivotX: 375, pivotY: 667, x: 375, y: 667 });
     expect(screen.components.map((item) => item.type)).toEqual(['engine.UIAnchor']);
     transformNode(doc, screen.id, before, { ...before, x: before.x + 40, y: before.y + 20 });
     expect(layoutPreview(doc.data.root).children[0]!.transform).toMatchObject({ x: 415, y: 687, width: 750 });
     doc.undo();
     expect(layoutPreview(doc.data.root).children[0]!.transform).toEqual(before);
     doc.data.root.transform.width = 900;
-    expect(layoutPreview(doc.data.root).children[0]!.transform).toMatchObject({ width: 900, x: 450 });
+    expect(layoutPreview(doc.data.root).children[0]!.transform).toMatchObject({ width: 900, x: 375 });
   });
   it('adds a UI Anchor without a legacy UITransform; avoids duplicate built-ins', () => {
     const doc = document();
@@ -75,7 +75,7 @@ describe('Component authoring workflow', () => {
     child.components.push(createManifestComponent('engine.UIAnchor', { anchorLeft: true, anchorRight: true, left: 10, right: 30 }));
     root.children.push(child);
     const doc = new SceneDocument({
-      schemaVersion: 3,
+      schemaVersion: 4,
       id: 'scene-ui',
       name: 'UI',
       settings: createDefaultSceneSettings({ designWidth: 480, designHeight: 320 }),
@@ -111,7 +111,7 @@ describe('Component authoring workflow', () => {
 
 describe('Rect Transform helpers', () => {
   it('derives the parent-space rect from position, size, pivot and mirroring', () => {
-    expect(nodeRect({ ...createEmptyNode('n').transform, x: 100, y: 80, width: 200, height: 100, pivotX: 0.5, pivotY: 0.5 }))
+    expect(nodeRect({ ...createEmptyNode('n').transform, x: 100, y: 80, width: 200, height: 100, pivotX: 100, pivotY: 50 }))
       .toEqual({ x: 0, y: 30, width: 200, height: 100 });
 
     // Mirrored horizontally: the pivot stays at x, so the rect extends left.

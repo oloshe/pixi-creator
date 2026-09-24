@@ -9,13 +9,10 @@ import {
 import type { RenderContext, RendererView } from '../core/RendererView';
 import type { RendererFactory } from '../core/RendererRegistry';
 import { buildSignature } from '../core/signature';
-import { isAssetRef, toColor, toNumber, toStringValue } from '../core/visual';
+import { isAssetRef, toColor, toNumber, toStringValue, toUnit } from '../core/visual';
 
 export const TextAligns = ['left', 'center', 'right'] as const;
 export type TextAlign = (typeof TextAligns)[number];
-
-export const TextVerticalAligns = ['top', 'middle', 'bottom'] as const;
-export type TextVerticalAlign = (typeof TextVerticalAligns)[number];
 
 /**
  * Text props.
@@ -33,8 +30,11 @@ export interface TextRendererProps {
 
   color: string;
 
+  /** Horizontal alignment of wrapped lines (`TextStyle.align`). */
   align: TextAlign;
-  verticalAlign: TextVerticalAlign;
+  /** Normalized `0 → 1` anchor of the text box within the node rect. */
+  anchorX: number;
+  anchorY: number;
 
   wordWrap: boolean;
   /** `0` (or negative) means "wrap at the node rect width". */
@@ -65,10 +65,6 @@ export function isTextAlign(value: unknown): value is TextAlign {
   return typeof value === 'string' && (TextAligns as readonly string[]).includes(value);
 }
 
-export function isTextVerticalAlign(value: unknown): value is TextVerticalAlign {
-  return typeof value === 'string' && (TextVerticalAligns as readonly string[]).includes(value);
-}
-
 export function resolveTextRendererProps(raw: Record<string, unknown>): TextRendererProps {
   const lineHeight = raw.lineHeight;
 
@@ -79,7 +75,8 @@ export function resolveTextRendererProps(raw: Record<string, unknown>): TextRend
     fontWeight: toStringValue(raw.fontWeight, 'normal'),
     color: toColor(raw.color, '#ffffff'),
     align: isTextAlign(raw.align) ? raw.align : 'left',
-    verticalAlign: isTextVerticalAlign(raw.verticalAlign) ? raw.verticalAlign : 'top',
+    anchorX: toUnit(raw.anchorX, 0),
+    anchorY: toUnit(raw.anchorY, 0),
     wordWrap: raw.wordWrap === true,
     wordWrapWidth: toNumber(raw.wordWrapWidth, 0),
     letterSpacing: toNumber(raw.letterSpacing, 0),
@@ -170,7 +167,8 @@ function textSignature(props: TextRendererProps, fontFamily: string, rect: { wid
     props.fontWeight,
     props.color,
     props.align,
-    props.verticalAlign,
+    props.anchorX,
+    props.anchorY,
     props.wordWrap,
     props.wordWrapWidth,
     props.letterSpacing,
@@ -192,9 +190,9 @@ function textSignature(props: TextRendererProps, fontFamily: string, rect: { wid
 /**
  * Draws text with `PIXI.Text`, aligned inside the node rect.
  *
- * The node pivot only moves the rect; it never shifts the glyphs. Horizontal
- * alignment uses the anchor, vertical alignment is a measured offset because
- * Pixi has no vertical alignment of its own.
+ * The node pivot only moves the rect; it never shifts the glyphs. The text box
+ * anchor (`0 → 1`) places the box inside the rect; `align` only affects how
+ * wrapped lines line up within the text box itself.
  */
 export class PixiTextRendererView implements RendererView<TextRendererProps> {
   readonly displayObject = new Text({ text: '', style: {} });
@@ -269,20 +267,13 @@ export class PixiTextRendererView implements RendererView<TextRendererProps> {
     this.displayObject.style = createPixiTextStyle({ ...props, fontFamily }, rect);
     this.displayObject.visible = props.visible;
 
-    const anchorX = props.align === 'center' ? 0.5 : props.align === 'right' ? 1 : 0;
-    const positionX = props.align === 'center' ? rect.width / 2 : props.align === 'right' ? rect.width : 0;
-    // Top alignment is the common case and needs no measurement at all.
-    const measuredHeight = props.verticalAlign === 'top' ? 0 : this.measureHeight();
-    const positionY = verticalOffset(props.verticalAlign, rect.height, measuredHeight);
+    // The anchor places the text box within the node rect: `0` top-left,
+    // `0.5` centred, `1` bottom-right. Pixi's anchor means no text measurement
+    // is needed for vertical alignment.
+    this.displayObject.anchor.set(props.anchorX, props.anchorY);
+    this.displayObject.position.set(rect.width * props.anchorX, rect.height * props.anchorY);
 
-    this.displayObject.anchor.set(anchorX, 0);
-    this.displayObject.position.set(positionX, positionY);
-
-    // Pixi measures text lazily. Folding the measured height into the stored key
-    // lets a corrected measurement re-run exactly once and then settle.
-    this.signature = props.verticalAlign === 'top'
-      ? signature
-      : `${signature}${measuredHeight}`;
+    this.signature = signature;
   }
 
   private effectiveFontFamily(): string {
@@ -291,22 +282,6 @@ export class PixiTextRendererView implements RendererView<TextRendererProps> {
     }
 
     return this.props?.fontFamily ?? 'Arial';
-  }
-
-  /**
-   * Measured height of the laid-out text, in design units.
-   *
-   * Only consulted for non-top vertical alignment. Measurement needs a canvas, so
-   * a host without one (headless tests) degrades to top alignment instead of
-   * throwing.
-   */
-  private measureHeight(): number {
-    try {
-      const height = this.displayObject.height;
-      return Number.isFinite(height) ? height : 0;
-    } catch {
-      return 0;
-    }
   }
 
   /**
@@ -370,18 +345,6 @@ export class PixiTextRendererView implements RendererView<TextRendererProps> {
         this.apply();
         context.requestRender?.();
       });
-  }
-}
-
-function verticalOffset(align: TextVerticalAlign, rectHeight: number, textHeight: number): number {
-  switch (align) {
-    case 'middle':
-      return (rectHeight - textHeight) / 2;
-    case 'bottom':
-      return rectHeight - textHeight;
-    case 'top':
-    default:
-      return 0;
   }
 }
 

@@ -1,87 +1,22 @@
-import { pivotWithCompensation, AddComponentCommand, BatchCommand, RemoveComponentCommand, SetComponentPropertyCommand, SetNodePropertyCommand, type NodePropertyPath } from '@pxe/editor-core';
+import { pivotWithCompensation, BatchCommand, RemoveComponentCommand, SetComponentPropertyCommand, SetNodePropertyCommand, type NodePropertyPath } from '@pxe/editor-core';
 import { defaultLayers } from '@pxe/schema';
 import { useEffect, useRef, useState } from 'react';
 import type { ComponentData, NodeData } from '@pxe/schema';
 import type { PropertyDefinition } from '@pxe/runtime';
-import { COMPONENT_DRAG_TYPE, NODE_DRAG_TYPE, createManifestComponent } from '../editor/componentManifest';
+import { COMPONENT_DRAG_TYPE, NODE_DRAG_TYPE } from '../editor/componentManifest';
 import { addComponent } from '../editor/componentActions';
 import { AssetPicker } from './AssetPicker';
 import { ComponentPalette } from './ComponentPalette';
 import { SceneSettingsInspector } from './SceneSettingsInspector';
 import { ChevronIcon } from './icons';
 import { ContextMenu } from './ContextMenu';
+import { NumberInput } from './NumberInput';
 import { findNode } from '../editor/find';
 import { useEditorStore } from '../editor/store';
 import { useSceneDocument } from '../editor/useSceneDocument';
 import { useI18n } from '../i18n';
 import { layoutPreview } from '../editor/previewLayout';
 import { transformNode } from '../editor/transformActions';
-
-const pivotPresets: [number, number][] = [
-  [0, 0], [0.5, 0], [1, 0],
-  [0, 0.5], [0.5, 0.5], [1, 0.5],
-  [0, 1], [0.5, 1], [1, 1],
-];
-
-interface AnchorGrid { h: 'left' | 'center' | 'right'; v: 'top' | 'center' | 'bottom'; }
-
-const anchorGrid: AnchorGrid[] = [
-  { h: 'left', v: 'top' }, { h: 'center', v: 'top' }, { h: 'right', v: 'top' },
-  { h: 'left', v: 'center' }, { h: 'center', v: 'center' }, { h: 'right', v: 'center' },
-  { h: 'left', v: 'bottom' }, { h: 'center', v: 'bottom' }, { h: 'right', v: 'bottom' },
-];
-
-function anchorProps(grid: AnchorGrid): Record<string, boolean> {
-  return {
-    anchorLeft: grid.h === 'left',
-    anchorRight: grid.h === 'right',
-    centerX: grid.h === 'center',
-    anchorTop: grid.v === 'top',
-    anchorBottom: grid.v === 'bottom',
-    centerY: grid.v === 'center',
-  };
-}
-
-function currentAnchorGrid(node: NodeData): AnchorGrid | null {
-  const anchor = node.components.find((component) => component.type === 'engine.UIAnchor' && component.enabled);
-  if (!anchor) return null;
-  const props = anchor.props;
-  const h = props.anchorLeft === true ? 'left' : props.anchorRight === true ? 'right' : props.centerX === true ? 'center' : null;
-  const v = props.anchorTop === true ? 'top' : props.anchorBottom === true ? 'bottom' : props.centerY === true ? 'center' : null;
-  if (h === null || v === null) return null;
-  return { h, v } as AnchorGrid;
-}
-
-/** Anchor "type" per axis: one of none / start / center / end / stretch. */
-type AxisAnchorType = 'none' | 'start' | 'center' | 'end' | 'stretch';
-
-function axisAnchorType(start: boolean, end: boolean, center: boolean): AxisAnchorType {
-  if (start && end) return 'stretch';
-  if (start) return 'start';
-  if (end) return 'end';
-  if (center) return 'center';
-  return 'none';
-}
-
-function horizontalAnchorType(props: Record<string, unknown>): AxisAnchorType {
-  return axisAnchorType(props.anchorLeft === true, props.anchorRight === true, props.centerX === true);
-}
-
-function verticalAnchorType(props: Record<string, unknown>): AxisAnchorType {
-  return axisAnchorType(props.anchorTop === true, props.anchorBottom === true, props.centerY === true);
-}
-
-/** Maps an axis type back onto the boolean UIAnchor properties. */
-function applyAxisAnchor(axis: 'h' | 'v', type: AxisAnchorType): Record<string, boolean> {
-  const start = axis === 'h' ? 'anchorLeft' : 'anchorTop';
-  const end = axis === 'h' ? 'anchorRight' : 'anchorBottom';
-  const center = axis === 'h' ? 'centerX' : 'centerY';
-  return {
-    [start]: type === 'start' || type === 'stretch',
-    [end]: type === 'end' || type === 'stretch',
-    [center]: type === 'center',
-  };
-}
 
 export function Inspector() {
   const { t } = useI18n();
@@ -126,7 +61,6 @@ export function Inspector() {
 
   const isCanvas = node.id === document.data.root.id;
   const nodeMeta = meta.nodeMeta(node.id);
-  const currentAnchor = currentAnchorGrid(node);
 
   function setNode(path: NodePropertyPath, value: unknown) {
     if (path.startsWith('transform.') && !isCanvas) {
@@ -157,30 +91,6 @@ export function Inspector() {
       new SetNodePropertyCommand(document.data.root, node!.id, 'transform.pivotY', pivotY),
     ]));
     refreshFromDocument('Pivot changed');
-  }
-
-  function setAnchorProps(partial: Record<string, unknown>) {
-    if (isCanvas) return;
-    const existing = node!.components.find((component) => component.type === 'engine.UIAnchor');
-
-    if (existing) {
-      const commands = [
-        ...(existing.enabled
-          ? []
-          : [new SetComponentPropertyCommand(document.data.root, existing.id, 'enabled', true)]),
-        ...Object.entries(partial).map(([key, value]) =>
-          new SetComponentPropertyCommand(document.data.root, existing.id, `props.${key}`, value)),
-      ];
-      document.execute(new BatchCommand('Set Anchor', commands));
-    } else {
-      document.execute(new AddComponentCommand(document.data.root, node!.id, createManifestComponent('engine.UIAnchor', partial, componentManifest)));
-    }
-
-    refreshFromDocument('Anchor changed');
-  }
-
-  function setAnchor(grid: AnchorGrid) {
-    setAnchorProps(anchorProps(grid));
   }
 
   return (
@@ -267,42 +177,6 @@ export function Inspector() {
           <NumberField disabled={isCanvas} label={t('inspector.scaleY')} value={node.transform.scaleY} onChange={(value) => setNode('transform.scaleY', value)} />
         </div>
 
-        <div className="nineGridRow">
-          <div className="nineGridGroup">
-            <div className="nineGridLabel">{t('inspector.pivot')}</div>
-            <div className="pivotPad" role="group" aria-label={t('inspector.pivotPresets')}>
-              {pivotPresets.map(([pivotX, pivotY]) => (
-                <button
-                  key={`${pivotX}-${pivotY}`}
-                  type="button"
-                  className={node.transform.pivotX === pivotX && node.transform.pivotY === pivotY ? 'active' : ''}
-                  disabled={isCanvas}
-                  title={`Pivot ${pivotX}, ${pivotY}`}
-                  onClick={() => setPivot(pivotX, pivotY)}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="nineGridGroup">
-            <div className="nineGridLabel">{t('inspector.anchor')}</div>
-            <div className="anchorPad" role="group" aria-label={t('inspector.anchorPresets')}>
-              {anchorGrid.map((grid) => (
-                <button
-                  key={`${grid.h}-${grid.v}`}
-                  type="button"
-                  className={currentAnchor?.h === grid.h && currentAnchor?.v === grid.v ? 'active' : ''}
-                  disabled={isCanvas}
-                  title={`Anchor ${grid.h} ${grid.v}`}
-                  onClick={() => setAnchor(grid)}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <AnchorEditor node={node} disabled={isCanvas} onAnchorChange={setAnchorProps} />
-
         <label className="checkboxRow">
           <input
             checked={node.transform.visible}
@@ -313,9 +187,6 @@ export function Inspector() {
         </label>
 
         {isCanvas && <p className="hint">{t('inspector.canvasHint')}</p>}
-        {hasAnchor(node) && (
-          <p className="hint">{t('inspector.anchorHint')}</p>
-        )}
       </section>
 
       <section className="inspectorSection">
@@ -355,62 +226,6 @@ export function layerNames(root: NodeData): string[] {
 
 function hasAnchor(node: NodeData): boolean {
   return node.components.some((component) => component.type === 'engine.UIAnchor' && component.enabled);
-}
-
-/**
- * Per-axis anchor editor: a type dropdown (none / start / center / end /
- * stretch) plus the margin / offset inputs relevant to that type, complementing
- * the 3×3 preset grid above it.
- */
-function AnchorEditor({ node, disabled, onAnchorChange }: {
-  node: NodeData;
-  disabled: boolean;
-  onAnchorChange(partial: Record<string, unknown>): void;
-}) {
-  const { t } = useI18n();
-  const anchor = node.components.find((component) => component.type === 'engine.UIAnchor' && component.enabled);
-  const props = anchor?.props ?? {};
-  const h = horizontalAnchorType(props);
-  const v = verticalAnchorType(props);
-
-  const setAxis = (axis: 'h' | 'v', type: AxisAnchorType) => onAnchorChange(applyAxisAnchor(axis, type));
-  const setNumber = (key: string, value: number) => onAnchorChange({ [key]: value });
-
-  return (
-    <div className="anchorEditor">
-      <div className="anchorAxisRow">
-        <label>
-          {t('inspector.anchorHorizontal')}
-          <select value={h} disabled={disabled} onChange={(event) => setAxis('h', event.target.value as AxisAnchorType)}>
-            <option value="none">{t('anchor.none')}</option>
-            <option value="start">{t('anchor.left')}</option>
-            <option value="center">{t('anchor.center')}</option>
-            <option value="end">{t('anchor.right')}</option>
-            <option value="stretch">{t('anchor.stretch')}</option>
-          </select>
-        </label>
-        <label>
-          {t('inspector.anchorVertical')}
-          <select value={v} disabled={disabled} onChange={(event) => setAxis('v', event.target.value as AxisAnchorType)}>
-            <option value="none">{t('anchor.none')}</option>
-            <option value="start">{t('anchor.top')}</option>
-            <option value="center">{t('anchor.center')}</option>
-            <option value="end">{t('anchor.bottom')}</option>
-            <option value="stretch">{t('anchor.stretch')}</option>
-          </select>
-        </label>
-      </div>
-
-      <div className="fieldGrid anchorMargins">
-        {(h === 'start' || h === 'stretch') && <NumberField label={t('anchor.leftMargin')} value={Number(props.left ?? 0)} disabled={disabled} onChange={(value) => setNumber('left', value)} />}
-        {(h === 'end' || h === 'stretch') && <NumberField label={t('anchor.rightMargin')} value={Number(props.right ?? 0)} disabled={disabled} onChange={(value) => setNumber('right', value)} />}
-        {h === 'center' && <NumberField label={t('anchor.offsetX')} value={Number(props.offsetX ?? 0)} disabled={disabled} onChange={(value) => setNumber('offsetX', value)} />}
-        {(v === 'start' || v === 'stretch') && <NumberField label={t('anchor.topMargin')} value={Number(props.top ?? 0)} disabled={disabled} onChange={(value) => setNumber('top', value)} />}
-        {(v === 'end' || v === 'stretch') && <NumberField label={t('anchor.bottomMargin')} value={Number(props.bottom ?? 0)} disabled={disabled} onChange={(value) => setNumber('bottom', value)} />}
-        {v === 'center' && <NumberField label={t('anchor.offsetY')} value={Number(props.offsetY ?? 0)} disabled={disabled} onChange={(value) => setNumber('offsetY', value)} />}
-      </div>
-    </div>
-  );
 }
 
 interface ComponentInspectorProps {
@@ -466,7 +281,6 @@ function ComponentInspector({ component, nodeId, onChange, onRemove }: Component
           </button>
           <button type="button" className="componentMore" aria-label={t('inspector.componentActions', { name })} title={t('inspector.componentActions', { name })} onClick={openMenu}>⋯</button>
         </div>
-        {!collapsed && component.type === 'engine.UIAnchor' && <AnchorHelp component={component} />}
         {!collapsed && !definition ? <div className="missing">{t('inspector.missing')}: {component.type}</div> : null}
         {!collapsed && definition
           ? Object.entries(definition.properties).map(([key, property]) => (
@@ -651,73 +465,15 @@ function NumberField({ label, value, onChange, onClear, min, max, disabled }: {
   return (
     <label>
       {label}
-      <input
-        value={value ?? ''}
-        placeholder="Auto"
-        type="number"
-        disabled={disabled}
+      <NumberInput
+        value={value}
         min={min}
         max={max}
-        step="any"
-        onChange={(event) => {
-          if (event.target.value === '' && onClear) {
-            onClear();
-            return;
-          }
-
-          const number = event.target.valueAsNumber;
-
-          if (Number.isFinite(number)) {
-            onChange(Math.max(min ?? -Infinity, Math.min(max ?? Infinity, number)));
-          }
-        }}
+        disabled={disabled}
+        onChange={onChange}
+        onClear={onClear}
       />
     </label>
-  );
-}
-
-/** Anchor presets mirror the runtime `UIAnchor` behaviour (§20, §21). */
-function AnchorHelp({ component }: { component: ComponentData }) {
-  const { t } = useI18n();
-  const store = useEditorStore;
-  const scene = useSceneDocument();
-  const refreshFromDocument = store((state) => state.refreshFromDocument);
-  const document = scene;
-  const presets: { label: string; props: Record<string, boolean> }[] = [
-    { label: t('inspector.anchorPresetCenter'), props: { anchorLeft: false, anchorRight: false, anchorTop: false, anchorBottom: false, centerX: true, centerY: true } },
-    { label: t('inspector.anchorPresetStretch'), props: { anchorLeft: true, anchorRight: true, anchorTop: true, anchorBottom: true, centerX: false, centerY: false } },
-    { label: t('inspector.anchorPresetTopLeft'), props: { anchorLeft: true, anchorRight: false, anchorTop: true, anchorBottom: false, centerX: false, centerY: false } },
-    { label: t('inspector.anchorPresetTopRight'), props: { anchorLeft: false, anchorRight: true, anchorTop: true, anchorBottom: false, centerX: false, centerY: false } },
-    { label: t('inspector.anchorPresetBottomRight'), props: { anchorLeft: false, anchorRight: true, anchorTop: false, anchorBottom: true, centerX: false, centerY: false } },
-    { label: t('inspector.anchorPresetBottomLeft'), props: { anchorLeft: true, anchorRight: false, anchorTop: false, anchorBottom: true, centerX: false, centerY: false } },
-  ];
-
-  return (
-    <div>
-      <p className="hint">{t('inspector.anchorHelp')}</p>
-      <div className="inlineActions anchorPresets">
-        {presets.map(({ label, props }) => (
-          <button
-            type="button"
-            key={label}
-            onClick={() => {
-              if (!document) {
-                return;
-              }
-
-              document.execute(new BatchCommand(
-                'UI Anchor preset',
-                Object.entries(props).map(([key, value]) =>
-                  new SetComponentPropertyCommand(document.data.root, component.id, `props.${key}`, value)),
-              ));
-              refreshFromDocument('UI Anchor preset applied');
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-    </div>
   );
 }
 

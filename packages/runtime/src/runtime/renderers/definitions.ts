@@ -1,4 +1,4 @@
-import { BlendModes, GraphicsShapes, TextAligns, TextVerticalAligns } from '@pxe/rendering';
+import { BlendModes, GraphicsShapes, TextAligns } from '@pxe/rendering';
 import { defineComponent, prop, type ComponentDefinition } from '../ComponentRegistry';
 import { SpriteRenderer, SpriteSizeModes } from './SpriteRenderer';
 import { TextRenderer } from './TextRenderer';
@@ -29,6 +29,8 @@ export const SpriteRendererDefinition = defineComponent({
     // Only used by `sizeMode: custom`; every other mode derives from the node RectTransform.
     width: prop.number({ min: 0 }),
     height: prop.number({ min: 0 }),
+    anchorX: prop.number({ default: 0, min: 0, max: 1 }),
+    anchorY: prop.number({ default: 0, min: 0, max: 1 }),
   },
 });
 
@@ -46,7 +48,8 @@ export const TextRendererDefinition = defineComponent({
     fontWeight: prop.string({ default: 'normal' }),
     color: prop.color({ default: '#ffffff' }),
     align: prop.enum({ values: [...TextAligns], default: 'left' }),
-    verticalAlign: prop.enum({ values: [...TextVerticalAligns], default: 'top' }),
+    anchorX: prop.number({ default: 0, min: 0, max: 1 }),
+    anchorY: prop.number({ default: 0, min: 0, max: 1 }),
     wordWrap: prop.boolean({ default: false }),
     // 0 = wrap at the node rect width.
     wordWrapWidth: prop.number({ default: 0, min: 0 }),

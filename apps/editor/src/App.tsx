@@ -7,18 +7,20 @@ import { PlayView } from './components/PlayView';
 import { AssetsBrowser } from './components/AssetsBrowser';
 import { MenuBar } from './components/MenuBar';
 import { StartScreen } from './components/StartScreen';
+import { Toaster } from './components/Toast';
 import { useEditorStore } from './editor/store';
 import { useI18n } from './i18n';
 import { detectHttpBackend } from './lib/api';
+import { clampPanelWidth, maxPanelWidth, minPanelWidth } from './editor/workspaceSettings';
 
 /** A scene document can be edited independently or inside an optional workspace. */
 export function App() {
   const document = useEditorStore((state) => state.document);
 
   // Under `pxe web` the workspace is the CLI's cwd; open it automatically so
-  // `cd my-project && npx pxe web` lands directly in the editor. Opening a
-  // *different* project goes through the browser-native directory picker, not
-  // this auto-open.
+  // `cd my-project && npx pxe web` lands directly in the editor with a real
+  // `rootPath` (which external-editor launches and the file manager need).
+  // Opening a *different* project still goes through the directory picker.
   useEffect(() => {
     void (async () => {
       if (await detectHttpBackend()) {
@@ -30,6 +32,7 @@ export function App() {
   return (
     <>
       {!document ? <StartScreen /> : <EditorShell />}
+      <Toaster />
     </>
   );
 }
@@ -50,7 +53,7 @@ function EditorShell() {
     <div className="editorShell">
       <MenuBar />
       <Toolbar />
-      <div className="workspace" style={{ gridTemplateColumns: `${leftPanelWidth}px 6px minmax(280px, 1fr) 6px ${rightPanelWidth}px` }}>
+      <div className="workspace" style={{ gridTemplateColumns: `${leftPanelWidth}px 6px minmax(0, 1fr) 6px ${rightPanelWidth}px` }}>
         <LeftPanel />
         <PanelDivider side="left" />
         {playState === 'stopped' ? <SceneView /> : <PlayView />}
@@ -102,6 +105,18 @@ function LeftPanel() {
   );
 }
 
+const DIVIDER_WIDTH = 6;
+/** The scene viewport never collapses below this width, even with wide panels. */
+const MIN_CENTER_WIDTH = 240;
+
+/** Clamps a panel width so the two side panels always leave room for the scene. */
+function panelLimit(containerWidth: number, otherPanelWidth: number): number {
+  return Math.max(
+    minPanelWidth,
+    Math.min(maxPanelWidth, containerWidth - otherPanelWidth - DIVIDER_WIDTH * 2 - MIN_CENTER_WIDTH),
+  );
+}
+
 /**
  * Drag handle between the sidebars and the scene view. Dragging updates the
  * matching panel width live; the value is persisted on release.
@@ -118,15 +133,20 @@ function PanelDivider({ side }: { side: 'left' | 'right' }) {
       aria-label={side === 'left' ? 'Resize left panel' : 'Resize right panel'}
       onPointerDown={(event) => {
         event.preventDefault();
+        const workspace = event.currentTarget.parentElement;
+        const containerWidth = workspace?.clientWidth ?? window.innerWidth;
         const startX = event.clientX;
         const state = useEditorStore.getState();
         const startWidth = side === 'left' ? state.leftPanelWidth : state.rightPanelWidth;
+        const otherWidth = side === 'left' ? state.rightPanelWidth : state.leftPanelWidth;
         document.body.style.cursor = 'col-resize';
         document.body.style.userSelect = 'none';
 
         const onMove = (moveEvent: PointerEvent) => {
           const delta = moveEvent.clientX - startX;
-          setPanelWidth(side, side === 'left' ? startWidth + delta : startWidth - delta);
+          const raw = side === 'left' ? startWidth + delta : startWidth - delta;
+          const max = panelLimit(containerWidth, otherWidth);
+          setPanelWidth(side, clampPanelWidth(Math.min(max, raw)));
         };
         const onUp = () => {
           window.removeEventListener('pointermove', onMove);

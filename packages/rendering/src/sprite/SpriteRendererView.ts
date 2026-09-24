@@ -3,7 +3,7 @@ import { Container, Graphics, Sprite, Texture } from 'pixi.js';
 import type { RenderContext, RendererView } from '../core/RendererView';
 import type { RendererFactory } from '../core/RendererRegistry';
 import { buildSignature } from '../core/signature';
-import { isAssetRef, toBlendMode, toColor, toNullableNumber, toNumber, type BlendMode } from '../core/visual';
+import { isAssetRef, toBlendMode, toColor, toNullableNumber, toNumber, toUnit, type BlendMode } from '../core/visual';
 
 export const SpriteSizeModes = ['native', 'custom', 'stretch', 'contain', 'cover'] as const;
 
@@ -54,9 +54,8 @@ export function resolveSpriteSize(
  *
  * Note what is *absent*: position, rotation, scale and pivot. Those belong to the
  * node container (`applyRectTransform`); a sprite renderer only draws itself
- * inside the node rect, whose local `0,0` is the rect's top-left corner.
- * Anchoring is expressed through the node's normalized pivot rather than a
- * second, competing anchor system.
+ * inside the node rect, whose local `0,0` is the rect's top-left corner. The
+ * sprite's own `anchor` (normalized `0 → 1`) aligns the texture within that rect.
  */
 export interface SpriteRendererProps {
   texture: AssetRef | null;
@@ -68,6 +67,12 @@ export interface SpriteRendererProps {
   /** `sizeMode: 'custom'` only. */
   width: number | null;
   height: number | null;
+  /**
+   * Normalized `0 → 1` anchor of the texture within the node rect
+   * (`0` = top-left, `0.5` = centre, `1` = bottom-right).
+   */
+  anchorX: number;
+  anchorY: number;
   visible: boolean;
 }
 
@@ -80,6 +85,8 @@ export function resolveSpriteRendererProps(raw: Record<string, unknown>): Sprite
     blendMode: (typeof raw.blendMode === 'string' ? raw.blendMode : 'normal') as BlendMode,
     width: toNullableNumber(raw.width),
     height: toNullableNumber(raw.height),
+    anchorX: toUnit(raw.anchorX, 0),
+    anchorY: toUnit(raw.anchorY, 0),
     visible: raw.visible !== false,
   };
 }
@@ -184,6 +191,8 @@ export class PixiSpriteRendererView implements RendererView<SpriteRendererProps>
       props.visible,
       props.width,
       props.height,
+      props.anchorX,
+      props.anchorY,
       rect.width,
       rect.height,
       textureSize.width,
@@ -211,14 +220,15 @@ export class PixiSpriteRendererView implements RendererView<SpriteRendererProps>
       this.sprite.height = size.height;
     }
 
-    // Aspect-preserving modes stay centred inside the rect.
+    const spareWidth = rect.width - (size.width ?? 0);
+    const spareHeight = rect.height - (size.height ?? 0);
+
+    // Aspect-preserving modes stay centred inside the rect; every other mode
+    // aligns the texture with the node rect according to the anchor.
     if (props.sizeMode === 'contain' || props.sizeMode === 'cover') {
-      this.sprite.position.set(
-        (rect.width - (size.width ?? 0)) / 2,
-        (rect.height - (size.height ?? 0)) / 2,
-      );
+      this.sprite.position.set(spareWidth / 2, spareHeight / 2);
     } else {
-      this.sprite.position.set(0, 0);
+      this.sprite.position.set(spareWidth * props.anchorX, spareHeight * props.anchorY);
     }
 
     this.placeholder.clear();

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const CURRENT_SCHEMA_VERSION = 3;
+export const CURRENT_SCHEMA_VERSION = 4;
 
 export const AssetRefSchema = z.object({
   assetId: z.string().min(1),
@@ -93,9 +93,10 @@ export function matchResolutionPreset(
 /**
  * Logical rectangle of a node.
  *
- * `pivotX` / `pivotY` are normalized (`0 → 1`, top-left → bottom-right) and are
- * the single pivot representation of the engine: Pixi's pixel pivot and the
- * sprite `anchor` are both derived from them.
+ * `pivotX` / `pivotY` are the pivot point in local **pixel** units (top-left
+ * `0,0` → bottom-right `width,height`), matching Pixi's `DisplayObject.pivot`.
+ * They are the single pivot representation of the engine: the runtime and the
+ * editor preview both write them straight onto the Pixi container.
  *
  * `x` / `y` place the pivot point inside the parent's local space, whose origin
  * is the parent's top-left corner and whose +Y axis points down.
@@ -464,6 +465,7 @@ export type Migration = {
 export const canvasNodeName = 'Canvas';
 
 export const sceneMigrations: Migration[] = [
+  { from: 3, to: 4, migrate: migrateV3ToV4 },
   { from: 2, to: 3, migrate: migrateV2ToV3 },
   {
     from: 1,
@@ -502,8 +504,27 @@ const widgetAnchorFields: Record<string, string> = {
   horizontalCenter: 'offsetX', verticalCenter: 'offsetY',
 };
 
+/** A scene whose `schemaVersion` may hold any intermediate value during migration. */
+type VersionedSceneData = Omit<SceneData, 'schemaVersion'> & { schemaVersion: number };
+
+/**
+ * v3 stored the pivot in normalized coordinates (`0 → 1`). v4 switches to Pixi's
+ * native pixel pivot, so each node's pivot is multiplied by its size.
+ */
+function migrateV3ToV4(data: unknown): unknown {
+  const scene = structuredClone(data) as VersionedSceneData;
+  scene.schemaVersion = 4;
+  const visit = (node: NodeData): void => {
+    node.transform.pivotX *= node.transform.width;
+    node.transform.pivotY *= node.transform.height;
+    node.children.forEach(visit);
+  };
+  visit(scene.root);
+  return scene;
+}
+
 function migrateV2ToV3(data: unknown, reportWarning = console.warn): unknown {
-  const scene = structuredClone(data) as SceneData;
+  const scene = structuredClone(data) as VersionedSceneData;
   scene.schemaVersion = 3;
   const visit = (node: NodeData): void => {
     const hasAnchor = node.components.some((component) => component.type === 'engine.UIAnchor');

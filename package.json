@@ -8,7 +8,6 @@
     "build:cli": "pnpm --filter @pxe/cli build",
     "copy:web": "node packages/cli/scripts/copy-web.mjs",
     "dev:editor": "pnpm --filter @pxe/editor dev",
-    "dev": "pnpm --filter @pxe/demo-game dev",
     "dev:cli": "pnpm copy:web && pnpm build:cli && node packages/cli/bin/pxe.mjs web --no-open",
     "test": "vitest run",
     "check:components": "node apps/editor/scripts/check-components.mjs"

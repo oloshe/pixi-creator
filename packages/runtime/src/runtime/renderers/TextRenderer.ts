@@ -6,13 +6,12 @@ import {
   type RenderContext,
   type TextAlign,
   type TextRendererProps,
-  type TextVerticalAlign,
 } from '@pxe/rendering';
 import { Component } from '../Component';
 import type { AssetManager } from '../AssetManager';
 import { RuntimeAssetResolver } from '../RuntimeAssetResolver';
 
-export type { TextAlign, TextRendererProps, TextVerticalAlign };
+export type { TextAlign, TextRendererProps };
 
 /**
  * Runtime text component.
@@ -31,7 +30,8 @@ export class TextRenderer extends Component {
   fontWeight = 'normal';
   color = '#ffffff';
   align: TextAlign = 'left';
-  verticalAlign: TextVerticalAlign = 'top';
+  anchorX = 0;
+  anchorY = 0;
   wordWrap = false;
   /** `0` means "wrap at the node rect width". */
   wordWrapWidth = 0;
@@ -86,7 +86,8 @@ export class TextRenderer extends Component {
       fontWeight: this.fontWeight,
       color: this.color,
       align: this.align,
-      verticalAlign: this.verticalAlign,
+      anchorX: this.anchorX,
+      anchorY: this.anchorY,
       wordWrap: this.wordWrap,
       wordWrapWidth: this.wordWrapWidth,
       letterSpacing: this.letterSpacing,

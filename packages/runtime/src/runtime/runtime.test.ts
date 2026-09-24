@@ -57,19 +57,19 @@ describe('GameNode', () => {
     expect(node.view.scale.x).toBe(2);
   });
 
-  it('converts the normalized pivot into Pixi pivot pixels', () => {
+  it('applies the pixel pivot straight onto the Pixi pivot', () => {
     const node = new GameNode('node', 'Node');
     node.setSize(200, 100);
-    node.pivotX = 0.5;
-    node.pivotY = 1;
+    node.pivotX = 100;
+    node.pivotY = 50;
 
     expect(node.view.pivot.x).toBe(100);
-    expect(node.view.pivot.y).toBe(100);
+    expect(node.view.pivot.y).toBe(50);
   });
 
   it('resolves the unrotated rect from position, size, pivot and scale', () => {
     const node = new GameNode('node', 'Node');
-    node.applyTransform(createDefaultTransform({ x: 100, y: 80, width: 200, height: 100, pivotX: 0.5, pivotY: 0.5, scaleX: 2 }));
+    node.applyTransform(createDefaultTransform({ x: 100, y: 80, width: 200, height: 100, pivotX: 100, pivotY: 50, scaleX: 2 }));
 
     expect(node.getRect()).toEqual({ x: -100, y: 30, width: 400, height: 100 });
   });
@@ -193,7 +193,7 @@ describe('SceneLoader', () => {
 
 function createScene(): SceneData {
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     id: 'scene-game',
     name: 'Game',
     settings: createDefaultSceneSettings(),

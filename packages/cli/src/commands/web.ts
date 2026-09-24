@@ -1,4 +1,3 @@
-import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import open from 'open';
@@ -22,18 +21,16 @@ function resolveWebRoot(): string {
 
 export async function runWebCommand(options: WebCommandOptions): Promise<void> {
   const workspace = process.cwd();
-  const token = crypto.randomUUID();
   const port = await findAvailablePort(options.preferredPort);
 
   startServer({
     port,
     workspace,
-    token,
     webRoot: resolveWebRoot(),
     hostname: BIND_HOST,
   });
 
-  const url = `http://${BIND_HOST}:${port}/?token=${encodeURIComponent(token)}`;
+  const url = `http://${BIND_HOST}:${port}/`;
 
   console.log();
   console.log('Pixi Creator Editor');

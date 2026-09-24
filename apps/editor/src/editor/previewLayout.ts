@@ -124,8 +124,8 @@ export function nodeMatrix(transform: RectTransformData): Matrix2D {
     sin * transform.scaleX,
     -sin * transform.scaleY,
     cos * transform.scaleY,
-    transform.x - (cos * transform.scaleX * transform.pivotX * transform.width) + (sin * transform.scaleY * transform.pivotY * transform.height),
-    transform.y - (sin * transform.scaleX * transform.pivotX * transform.width) - (cos * transform.scaleY * transform.pivotY * transform.height),
+    transform.x - (cos * transform.scaleX * transform.pivotX) + (sin * transform.scaleY * transform.pivotY),
+    transform.y - (sin * transform.scaleX * transform.pivotX) - (cos * transform.scaleY * transform.pivotY),
   ];
 }
 

@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { authGuard, hostGuard } from './auth.js';
+import { hostGuard, originGuard } from './auth.js';
 import { registerFsRoutes } from './routes/fs.js';
 import { registerSystemRoutes } from './routes/system.js';
 import { serveWeb } from './static.js';
@@ -7,7 +7,6 @@ import { WorkspaceError, WorkspaceState } from './workspace.js';
 
 export interface AppOptions {
   workspace: string;
-  token: string;
   webRoot: string;
 }
 
@@ -20,8 +19,8 @@ export function createApp(options: AppOptions): Hono {
 
   app.get('/api/health', (c) => c.json({ ok: true }));
 
-  // Everything else under /api needs the per-launch bearer token.
-  app.use('/api/*', authGuard(options.token));
+  // API routes are loopback-only via originGuard (no session token).
+  app.use('/api/*', originGuard());
 
   registerFsRoutes(app, workspace);
   registerSystemRoutes(app, workspace);

@@ -4,6 +4,7 @@ import type { ResizeMode, SceneOrientation } from '@pxe/schema';
 import { useEditorStore } from '../editor/store';
 import { useSceneDocument } from '../editor/useSceneDocument';
 import { useI18n } from '../i18n';
+import { NumberInput } from './NumberInput';
 
 const resizeModes: ResizeMode[] = ['contain', 'cover', 'fixed-width', 'fixed-height', 'stretch'];
 const orientations: SceneOrientation[] = ['portrait', 'landscape', 'any'];
@@ -39,26 +40,18 @@ export function SceneSettingsInspector() {
         <div className="fieldGrid">
           <label>
             {t('inspector.width')}
-            <input
-              type="number"
+            <NumberInput
               min={1}
               value={settings.designWidth}
-              onChange={(event) => {
-                const value = Math.max(1, Math.round(Number(event.target.value) || 1));
-                updateSceneSettings({ designWidth: value });
-              }}
+              onChange={(value) => updateSceneSettings({ designWidth: Math.max(1, Math.round(value)) })}
             />
           </label>
           <label>
             {t('inspector.height')}
-            <input
-              type="number"
+            <NumberInput
               min={1}
               value={settings.designHeight}
-              onChange={(event) => {
-                const value = Math.max(1, Math.round(Number(event.target.value) || 1));
-                updateSceneSettings({ designHeight: value });
-              }}
+              onChange={(value) => updateSceneSettings({ designHeight: Math.max(1, Math.round(value)) })}
             />
           </label>
         </div>

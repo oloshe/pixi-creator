@@ -4,18 +4,21 @@ import { createCanvasNode } from './utils';
 import { pivotWithCompensation } from './pivot';
 
 describe('pivot compensation', () => {
-  for (const [pivotX, pivotY] of [[0, 0], [0, 1], [1, 0], [1, 1]]) {
+  const width = 160;
+  const height = 90;
+
+  for (const [pivotX, pivotY] of [[0, 0], [0, height], [width, 0], [width, height]]) {
     for (const [scaleX, scaleY, rotationDeg] of [[1, 1, 0], [-1, 1, 0], [1, -1, 0], [-2, 3, 37]]) {
       it(`preserves visual corners at ${pivotX},${pivotY}; scale ${scaleX},${scaleY}; angle ${rotationDeg}`, () => {
-        const before = createDefaultTransform({ x: 80, y: 120, width: 160, height: 90, pivotX: 0.5, pivotY: 0.5, scaleX, scaleY, rotationDeg });
+        const before = createDefaultTransform({ x: 80, y: 120, width, height, pivotX: width / 2, pivotY: height / 2, scaleX, scaleY, rotationDeg });
         const after = pivotWithCompensation(before, pivotX!, pivotY!);
         const point = (t: typeof before, x: number, y: number) => {
           const a = t.rotationDeg * Math.PI / 180;
-          const dx = (x - t.width * t.pivotX) * t.scaleX;
-          const dy = (y - t.height * t.pivotY) * t.scaleY;
+          const dx = (x - t.pivotX) * t.scaleX;
+          const dy = (y - t.pivotY) * t.scaleY;
           return [t.x + Math.cos(a) * dx - Math.sin(a) * dy, t.y + Math.sin(a) * dx + Math.cos(a) * dy];
         };
-        for (const [x, y] of [[0, 0], [160, 90]]) {
+        for (const [x, y] of [[0, 0], [width, height]]) {
           const oldPoint = point(before, x!, y!);
           point(after, x!, y!).forEach((value, i) => expect(value).toBeCloseTo(oldPoint[i]!));
         }

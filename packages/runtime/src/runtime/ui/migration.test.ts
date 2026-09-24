@@ -12,9 +12,9 @@ function legacy(version: number) {
 
 describe('scene layout migration', () => {
   for (const version of [1, 2]) {
-    it(`migrates v${version} to v3 with equivalent layout and preserved unknown fields`, () => {
+    it(`migrates v${version} to v4 with equivalent layout and preserved unknown fields`, () => {
       const scene = parseSceneData(legacy(version));
-      expect(scene.schemaVersion).toBe(3);
+      expect(scene.schemaVersion).toBe(4);
       const anchor = scene.root.components[0]!;
       expect(anchor).toMatchObject({ id: 'layout', type: 'engine.UIAnchor', enabled: false,
         props: { anchorLeft: true, anchorRight: true, centerX: true, offsetX: 99, custom: { keep: [1, 2] } } });
@@ -37,7 +37,7 @@ describe('scene layout migration', () => {
   it('stretches before centering, handles each axis separately, and mirrors negative scales', () => {
     const result = calculateAnchorLayout({ width: 600, height: 400 }, { width: 100, height: 50 },
       { ...defaultUIAnchor, anchorLeft: true, anchorRight: true, centerX: true, left: 10, right: 30, centerY: true, offsetY: 20 },
-      createDefaultTransform({ scaleX: -2, scaleY: -3, pivotX: 0.25, pivotY: 0.2 }));
-    expect(result).toEqual({ x: 430, y: 265, width: 280, height: 50 });
+      createDefaultTransform({ scaleX: -2, scaleY: -3, pivotX: 25, pivotY: 10 }));
+    expect(result).toEqual({ x: 520, y: 265, width: 280, height: 50 });
   });
 });

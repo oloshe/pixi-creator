@@ -58,7 +58,6 @@ describe('createPixiTextStyle', () => {
     fontWeight: '700',
     color: '#ffffff',
     align: 'center',
-    verticalAlign: 'top',
     wordWrap: true,
     wordWrapWidth: 0,
     letterSpacing: 2,
@@ -117,35 +116,35 @@ describe('createPixiTextStyle', () => {
   });
 
   it('normalises unknown values onto the documented defaults', () => {
-    const props = resolveTextRendererProps({ fontSize: 'huge', align: 'middle', verticalAlign: 'center', color: '' });
+    const props = resolveTextRendererProps({ fontSize: 'huge', align: 'middle', anchorX: 4, anchorY: -1, color: '' });
 
     expect(props.fontSize).toBe(32);
     expect(props.align).toBe('left');
-    expect(props.verticalAlign).toBe('top');
+    expect(props.anchorX).toBe(1);
+    expect(props.anchorY).toBe(0);
     expect(props.color).toBe('#ffffff');
   });
 });
 
 describe('PixiTextRendererView', () => {
-  it('draws with PIXI.Text and aligns inside the node rect', () => {
+  it('draws with PIXI.Text and anchors inside the node rect', () => {
     const view = new PixiTextRendererView();
     view.create();
 
     expect(view.displayObject).toBeInstanceOf(Text);
 
     view.update(
-      resolveTextRendererProps({ text: 'Hello', fontSize: 60, align: 'center' }),
+      resolveTextRendererProps({ text: 'Hello', fontSize: 60, anchorX: 0.5 }),
       context(createDefaultTransform({ width: 200, height: 80 })),
     );
 
     expect(view.displayObject.text).toBe('Hello');
     expect(view.displayObject.anchor.x).toBe(0.5);
     expect(view.displayObject.x).toBe(100);
-    // Top alignment is the default and needs no measurement.
     expect(view.displayObject.y).toBe(0);
 
     view.update(
-      resolveTextRendererProps({ text: 'Hello', fontSize: 60, align: 'right' }),
+      resolveTextRendererProps({ text: 'Hello', fontSize: 60, anchorX: 1 }),
       context(createDefaultTransform({ width: 200, height: 80 })),
     );
 
@@ -208,17 +207,17 @@ describe('PixiTextRendererView', () => {
 /* -------------------------------------------------------------------------- */
 
 describe('shared RectTransform maths', () => {
-  it('derives the pixel pivot from the normalized pivot', () => {
-    expect(pixelPivot({ width: 200, height: 100, pivotX: 0.5, pivotY: 1 })).toEqual({ x: 100, y: 100 });
+  it('passes the pixel pivot through unchanged', () => {
+    expect(pixelPivot({ pivotX: 100, pivotY: 50 })).toEqual({ x: 100, y: 50 });
   });
 
   it('mirrors the effective pivot for negative scale', () => {
-    expect(effectivePivot(1, 0.25)).toBe(0.25);
-    expect(effectivePivot(-1, 0.25)).toBe(0.75);
+    expect(effectivePivot(1, 25, 100)).toBe(25);
+    expect(effectivePivot(-1, 25, 100)).toBe(75);
   });
 
   it('derives the parent-space rect, including mirroring', () => {
-    expect(rectOfTransform(createDefaultTransform({ x: 100, y: 80, width: 200, height: 100, pivotX: 0.5, pivotY: 0.5 })))
+    expect(rectOfTransform(createDefaultTransform({ x: 100, y: 80, width: 200, height: 100, pivotX: 100, pivotY: 50 })))
       .toEqual({ x: 0, y: 30, width: 200, height: 100 });
 
     expect(rectOfTransform(createDefaultTransform({ width: 100, height: 50, scaleX: -1 })))
@@ -228,7 +227,7 @@ describe('shared RectTransform maths', () => {
   it('writes position, scale, rotation, pivot and alpha onto a container', () => {
     const container = new Container();
     applyRectTransform(container, createDefaultTransform({
-      x: 10, y: 20, width: 200, height: 100, pivotX: 0.5, pivotY: 0.5, scaleX: 2, rotationDeg: 90, alpha: 0.5,
+      x: 10, y: 20, width: 200, height: 100, pivotX: 100, pivotY: 50, scaleX: 2, rotationDeg: 90, alpha: 0.5,
     }));
 
     expect(container.position.x).toBe(10);
@@ -519,7 +518,7 @@ describe('ScenePreviewTree incremental sync', () => {
   }
 
   function sceneOf(root: NodeData): SceneData {
-    return { schemaVersion: 3, id: 'scene-preview', name: 'Preview', settings: createDefaultSceneSettings(), root };
+    return { schemaVersion: 4, id: 'scene-preview', name: 'Preview', settings: createDefaultSceneSettings(), root };
   }
 
   it('creates Pixi containers and renderer views on the first sync', () => {

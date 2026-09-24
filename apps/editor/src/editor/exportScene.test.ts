@@ -4,7 +4,7 @@ import { createDefaultSceneSettings } from '@pxe/schema';
 import { createEmbedSnippet } from './exportScene';
 
 it('embeds portable assets and escapes project code without closing the HTML script', () => {
-  const scene = { schemaVersion: 3 as const, id: 'scene', name: 'Test', settings: createDefaultSceneSettings(), root: createCanvasNode() };
+  const scene = { schemaVersion: 4 as const, id: 'scene', name: 'Test', settings: createDefaultSceneSettings(), root: createCanvasNode() };
   const snippet = createEmbedSnippet(scene, { schemaVersion: 2, assets: [{ id: 'a', type: 'texture', path: 'assets/a.svg' }], scenePreloads: {} },
     [{ path: 'src/A.ts', code: 'const label = "</script><script>unexpected()</script>";' }]);
   expect(snippet.split('\n')).toHaveLength(3);

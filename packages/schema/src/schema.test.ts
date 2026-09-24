@@ -7,7 +7,7 @@ import {
 } from './index';
 
 describe('SceneSchema', () => {
-  it('validates recursive v2 scene data with settings', () => {
+  it('validates recursive v2 scene data with settings and migrates to the pixel pivot', () => {
     const scene = parseSceneData({
       schemaVersion: 2,
       id: 'scene-test',
@@ -46,7 +46,8 @@ describe('SceneSchema', () => {
 
     expect(scene.settings.designWidth).toBe(750);
     expect(scene.root.children[0]?.transform.x).toBe(10);
-    expect(scene.root.children[0]?.transform.pivotX).toBe(0.5);
+    expect(scene.root.children[0]?.transform.pivotX).toBe(48);
+    expect(scene.root.children[0]?.transform.pivotY).toBe(48);
     expect(scene.root.children[0]?.zIndex).toBe(3);
     expect(scene.root.children[0]?.layer).toBeUndefined();
   });
@@ -103,13 +104,13 @@ describe('SceneSchema', () => {
       },
     });
 
-    expect(scene.schemaVersion).toBe(3);
+    expect(scene.schemaVersion).toBe(4);
     expect(scene.settings.designWidth).toBeGreaterThan(0);
     const panel = scene.root.children[0]!;
     expect(panel.transform.width).toBe(480);
     expect(panel.transform.height).toBe(320);
-    expect(panel.transform.pivotX).toBe(0.5);
-    expect(panel.transform.pivotY).toBe(1);
+    expect(panel.transform.pivotX).toBe(240);
+    expect(panel.transform.pivotY).toBe(320);
     expect(panel.components.some((component) => component.type === 'engine.UITransform')).toBe(false);
     expect(panel.zIndex).toBe(0);
   });
@@ -117,7 +118,7 @@ describe('SceneSchema', () => {
   it('rejects unsupported schema versions', () => {
     expect(() =>
       parseSceneData({
-        schemaVersion: 4,
+        schemaVersion: 5,
         id: 'scene-test',
         name: 'Test',
         root: {},

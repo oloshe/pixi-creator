@@ -4,7 +4,7 @@
  *
  * Layout is resolved in the parent's local space, whose origin is the parent's
  * top-left corner with +Y pointing down, and against the *unrotated* rectangle
- * of the node. `pivotX` / `pivotY` are normalized (`0 → 1`).
+ * of the node. `pivotX` / `pivotY` are pixel offsets within the node rect.
  */
 export interface UISize {
   width: number;
@@ -131,7 +131,8 @@ function axis(
     return { position, length };
   }
 
-  // A negative scale mirrors the rectangle around the pivot.
-  const effectivePivot = scale < 0 ? 1 - pivot : pivot;
-  return { position: left + effectivePivot * extent, length: nextLength };
+  // A negative scale mirrors the rectangle around the pivot. `nextLength` is the
+  // node's logical length after any stretch, so the pixel pivot stays fixed.
+  const effectivePivot = scale < 0 ? nextLength - pivot : pivot;
+  return { position: left + effectivePivot * magnitude, length: nextLength };
 }

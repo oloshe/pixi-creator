@@ -58,7 +58,7 @@ npx @pxe/cli web          # 或本地：node packages/cli/bin/pxe.mjs web
 
 - **工作区**：`process.cwd()`（你执行命令的目录）就是打开的项目；`pxe.config.json` 缺失时会按缺省 `assets` / `src` 补写。
 - **端口**：默认 `127.0.0.1:18118`，被占用则自动 `+1`（18119、18120…）。前端只用相对 `/api/*`，不感知端口。
-- **安全**：只绑定回环地址；每次启动生成一个 `session token`（`/?token=…`），所有 `/api/*` 请求带 `Authorization: Bearer …`，并校验 `Origin` / `Host` 防止 CSRF 与 DNS rebinding。
+- **安全**：只绑定回环地址，校验 `Origin` / `Host` 防止 CSRF 与 DNS rebinding（无 session token）。
 - **文件沙箱**：`/api/fs/*` 拒绝绝对路径与 `..`，所有读写被限制在工作区内；外部编辑器通过白名单 action（`/api/system/open-editor`）启动，不做任意命令 API。
 - **构建**：`pnpm build:web && pnpm copy:web && pnpm build:cli` 生成 `apps/editor/dist` → 复制进 `packages/cli/web` → 编译 `packages/cli/dist`。`pnpm dev:cli` 一条命令本地起服务（不自动开浏览器）。
 
@@ -74,11 +74,11 @@ Canvas 是固定设计坐标系：x/y/rotation/pivot 为零，scale 为一，wid
 
 需要整体移动、旋转、缩放时，添加 **Screen** 全屏容器并把内容放入其下。该节点以设计中心为 pivot，四边 UIAnchor 铺满画布，不包含渲染组件。选中容器后用 Move / Rotate / Scale 工具操作。变换同时调整布局边距，修改设计尺寸后仍保持对应的四边布局。
 
-普通节点的 pivot 使用 0–1 归一化坐标。Inspector 数值、九宫格预设和视口 pivot 拖拽共用补偿公式，含旋转与负 scale，改变原点不会移动画面。节点本地矩形从左上角 `(0,0)` 开始，+Y 向下；pivot 的像素值由尺寸派生。
+普通节点的 pivot 使用像素坐标（与 Pixi 的 `DisplayObject.pivot` 一致）。Inspector 数值和视口 pivot 拖拽共用补偿公式，含旋转与负 scale，改变原点不会移动画面。节点本地矩形从左上角 `(0,0)` 开始，+Y 向下。Sprite / Text 的锚点使用 0–1 归一化坐标，直接在组件里填写。
 
 只有一个布局组件 **UIAnchor**：Left+Right 拉伸宽度，Top+Bottom 拉伸高度；同轴双边优先于居中，两轴独立，负缩放按镜像 pivot 计算。布局作用于父节点的未旋转矩形。拖动或 Inspector 变换会在同一步撤销记录中更新相应边距。
 
-Scene JSON 当前为 **schema v3**。v1/v2 自动迁移为 v3；旧 Widget 转为 UIAnchor 并保留未知 props；同节点已有 UIAnchor 时保留它、丢弃旧布局组件并警告。旧类型不再是可添加的有效组件类型。未知项目组件显示 `Missing component type`，其数据保存/重开保持不变。
+Scene JSON 当前为 **schema v4**。v1/v2/v3 自动迁移为 v4（v3 的归一化 pivot 会换算为像素 pivot）；旧 Widget 转为 UIAnchor 并保留未知 props；同节点已有 UIAnchor 时保留它、丢弃旧布局组件并警告。旧类型不再是可添加的有效组件类型。未知项目组件显示 `Missing component type`，其数据保存/重开保持不变。
 
 Hierarchy 顺序是日常排序入口；Layer / zIndex 保留排序能力，放在 Inspector 默认折叠的 **Advanced** 中。
 

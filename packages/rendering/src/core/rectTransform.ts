@@ -17,28 +17,28 @@ export function radToDeg(radians: number): number {
 }
 
 /**
- * Normalized pivot (`0 → 1`) to Pixi pivot in local, unscaled units.
+ * Pixi pivot in local pixel units — `pivotX` / `pivotY` are already pixels.
  *
- * This is the only place the engine converts a pivot: the editor and the runtime
- * both go through it, so a node can never look different in the two.
+ * This is the only place the engine hands a pivot to Pixi: the editor and the
+ * runtime both go through it, so a node can never look different in the two.
  */
 export function pixelPivot(
-  transform: Pick<RectTransformData, 'width' | 'height' | 'pivotX' | 'pivotY'>,
+  transform: Pick<RectTransformData, 'pivotX' | 'pivotY'>,
 ): { x: number; y: number } {
   return {
-    x: transform.width * transform.pivotX,
-    y: transform.height * transform.pivotY,
+    x: transform.pivotX,
+    y: transform.pivotY,
   };
 }
 
 /**
- * Mirror-aware normalized pivot.
+ * Mirror-aware pixel pivot.
  *
- * A negatively scaled axis flips the rect, so the pivot that lands on the same
- * visual corner becomes `1 - pivot`.
+ * A negatively scaled axis flips the rect, so the pivot offset from the visual
+ * top-left edge becomes `size - pivot`.
  */
-export function effectivePivot(scale: number, pivot: number): number {
-  return scale < 0 ? 1 - pivot : pivot;
+export function effectivePivot(scale: number, pivot: number, size: number): number {
+  return scale < 0 ? size - pivot : pivot;
 }
 
 /** Effective size of the node in the parent's local space, in design units. */
@@ -59,8 +59,8 @@ export function rectOfTransform(transform: RectTransformData): Rect {
   const { width, height } = rectSize(transform);
 
   return {
-    x: transform.x - effectivePivot(transform.scaleX, transform.pivotX) * width,
-    y: transform.y - effectivePivot(transform.scaleY, transform.pivotY) * height,
+    x: transform.x - effectivePivot(transform.scaleX, transform.pivotX, transform.width) * Math.abs(transform.scaleX),
+    y: transform.y - effectivePivot(transform.scaleY, transform.pivotY, transform.height) * Math.abs(transform.scaleY),
     width,
     height,
   };

@@ -1,5 +1,5 @@
 import type { Hono } from 'hono';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { resolveWorkspacePath, type WorkspaceState } from '../workspace.js';
 
@@ -81,11 +81,30 @@ function editorCommand(
   }
 }
 
+/** Reports whether an executable resolves on PATH (best-effort pre-flight). */
+function commandExists(command: string): boolean {
+  try {
+    const check = process.platform === 'win32'
+      ? spawnSync('where', [command], { stdio: 'pipe', windowsHide: true })
+      : spawnSync('which', [command], { stdio: 'pipe' });
+    return check.status === 0;
+  } catch {
+    // Cannot verify — let the real spawn try and report its own error.
+    return true;
+  }
+}
+
 function launch(command: string, args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
+    if (!commandExists(command)) {
+      reject(new Error(`command not found: ${command}`));
+      return;
+    }
+
     // On Windows the command is usually a `.cmd` shim (`code.cmd`) that only runs
     // through a shell; `explorer` and `notepad` also expect a shell. Build one
     // quoted command line there instead of letting Node mangle the args array.
+    console.log('[pxe] open-editor:', command, args.join(' '));
     const child = process.platform === 'win32'
       ? spawn([command, ...args].map(quoteWindows).join(' '), {
         shell: true,

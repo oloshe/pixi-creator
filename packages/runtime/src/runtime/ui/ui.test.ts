@@ -26,7 +26,7 @@ describe('UI Anchor layout', () => {
       parent,
       { width: 160, height: 100 },
       { ...defaultUIAnchor, centerX: true, centerY: true },
-      createDefaultTransform({ pivotX: 0.5, pivotY: 0.5 }),
+      createDefaultTransform({ pivotX: 80, pivotY: 50 }),
     );
 
     expect(result.x).toBe(300);
@@ -107,7 +107,7 @@ async function load(root: NodeData, registry = new ComponentRegistry(), size = {
   await assets.init({ schemaVersion: 2, assets: [], scenePreloads: {} });
   // The scene root always matches the design resolution.
   const data: SceneData = {
-    schemaVersion: 3,
+    schemaVersion: 4,
     id: 'scene-ui',
     name: 'UI',
     settings: createDefaultSceneSettings({ designWidth: size.width, designHeight: size.height }),

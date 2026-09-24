@@ -32,7 +32,7 @@ function mimeOf(filePath: string): string {
  * Serves the prebuilt React editor from `web/` (index.html + play.html + assets).
  *
  * Unknown non-API paths fall back to `index.html`. API paths are never served
- * here — they are handled (and token-guarded) by the routes registered earlier.
+ * here — they are handled by the routes registered earlier.
  */
 export function serveWeb(app: Hono, webRoot: string): void {
   app.get('*', (c) => {
